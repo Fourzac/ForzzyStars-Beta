@@ -294,7 +294,7 @@ input[type=text]:focus{outline:none;border-color:#a855f7}
       <div style="font-size:9px;color:#8878aa;text-align:center" id="gadgetCount"></div>
     </div>
     <div style="display:flex;flex-direction:column;gap:2px;align-items:center">
-      <div class="super-btn-hud" id="superBtnHud" onclick="useSuper()">R<br><span style="font-size:9px" id="superName">Супер</span></div>
+      <div class="super-btn-hud" id="superBtnHud" onclick="useSuper()">E/R<br><span style="font-size:9px" id="superName">Супер</span></div>
       <div class="super-bar"><div class="super-fill" id="superFill" style="width:0%"></div></div>
     </div>
     <div class="hpw" style="text-align:right">
@@ -449,13 +449,13 @@ const ICON_COSTS={0:0,1:0,2:0,3:30,4:30,5:50,6:50,7:50,8:80,9:80,10:100,11:100,1
 const MODES=[
   {id:'duel',name:'Дуель',emo:'⚔️',desc:'1 на 1 з ботом. 3 раунди — хто виграє 2+.',bots:1,team:false,rounds:3},
   {id:'brawl3',name:'3 на 3',emo:'🤝',desc:'Команда 3 проти 3. 3 раунди — хто виграє 2+!',bots:5,team:true,rounds:3},
-  {id:'heist',name:'Пограбування',emo:'🏦',desc:'3 на 3: захисти свій сейф і знищ ворожий!',bots:5,team:true,rounds:3,heist:true},
+  {id:'heist',name:'Пограбування',emo:'🏦',desc:'3 на 3: захисти свій сейф і знищ ворожий!',bots:5,team:true,heist:true},
   {id:'gem',name:'Збір кристалів',emo:'💎',desc:'3 на 3: збери 10 кристалів і тримай їх!',bots:5,team:true,gemgrab:true},
   {id:'siege',name:'Облога',emo:'🔩',desc:'3 на 3: збирай болти та будуй робота для атаки!',bots:5,team:true,siege:true},
   {id:'clash',name:'Зіткнення',emo:'💥',desc:'Всі проти всіх! Виживи останнім.',bots:7,team:false,ffa:true},
   {id:'bounty',name:'Полювач за головами',emo:'💀',desc:'Перша команда з 10 вбивствами перемагає! При смерті — воскресаєш через 3 сек.',bots:5,team:true,bounty:true},
   {id:'training',name:'🤖 Тренування',emo:'🎯',desc:'Грай проти бота на будь-якому бійці. Без трофеїв!',bots:1,team:false,rounds:1,training:true},
-  {id:'ranked',name:'🏅 Рейтинговий',emo:'🏅',desc:'Заробляй Ело та піднімайся по рангах! Без Зіткнень та Дуелей.',bots:1,team:false,ranked:true,rounds:1},
+  {id:'ranked',name:'🏅 Рейтинговий',emo:'🏅',desc:'Заробляй Ело та піднімайся по рангах! Режими: 3×3, Пограбування, Кристали, Облога, Полювання.',bots:1,team:false,ranked:true,rounds:1},
 ];
 
 // ===== RANKED SYSTEM =====
@@ -490,8 +490,9 @@ function getRankedEloChange(elo,win){
   return win?rank.winElo:-rank.loseElo;
 }
 
-// Modes allowed in ranked (no clash/duel/training)
+// Modes allowed in ranked (no clash/duel/training/ffa)
 const RANKED_MODES=['brawl3','heist','gem','siege','bounty'];
+// All of the above modes are fully supported in ranked
 
 // ===== MAPS =====
 // Each map has: id, name, walls(fn), bushes(fn), water(fn), spawnBlue, spawnRed, bigMap
@@ -652,11 +653,20 @@ function getSave(id){return S.brawlers.find(b=>b.id===id);}
 function getTotalTrophies(){return S.brawlers.reduce((a,b)=>a+b.trophies,0);}
 function getPowerMult(power){return 1+(power-1)*0.1;}
 
-// AI difficulty multiplier based on total trophies
-function getAIDiffMult(){
+// AI difficulty multiplier
+// Training mode: always 1 (no boost)
+// Ranked mode: based on ELO (+5% per 300 elo)
+// Normal modes: based on total trophies (+5% per 100 trophies)
+function getAIDiffMult(isTraining, isRanked){
+  if(isTraining) return 1;
+  if(isRanked){
+    const elo=S.rankedElo||0;
+    const steps=Math.floor(elo/300);
+    return 1+steps*0.05;
+  }
   const total=getTotalTrophies();
-  const steps=Math.floor(total/200);
-  return 1+steps*0.15; // +15% per 200 trophies
+  const steps=Math.floor(total/100);
+  return 1+steps*0.05;
 }
 
 function upTopBar(){
@@ -738,19 +748,41 @@ function renderHome(){
     d.className='mode-card'+(S.selMode===m.id?' sel':'');
     if(S.selMode===m.id)d.style.borderColor='#a855f7';
     let extraNote='';
-    if(m.training){extraNote=`<div class="training-note" style="margin-top:6px;font-size:11px">🤖 Проти бота · Всі бійці · Без трофеїв</div>`;}
+    if(m.training){extraNote=`<div class="training-note" style="margin-top:6px;font-size:11px">🤖 Проти бота · Всі бійці · Без трофеїв · Складність не підвищується</div>`;}
     if(m.ranked){
       const{rank,level}=getRankInfo(S.rankedElo||0);
-      extraNote=`<div class="ranked-note" style="margin-top:6px;font-size:11px">🏅 Ело: ${S.rankedElo||0} · ${rank.emo} ${rank.name} ${rank.levels>1?level:''}</div>`;
+      const elo=S.rankedElo||0;
+      const eloSteps=Math.floor(elo/300);
+      const diffPct=eloSteps*5;
+      extraNote=`<div class="ranked-note" style="margin-top:6px;font-size:11px">🏅 Ело: ${S.rankedElo||0} · ${rank.emo} ${rank.name} ${rank.levels>1?level:''}${diffPct>0?' · 🤖 +'+diffPct+'% складність':''}</div>`;
     }
     d.innerHTML=`<div class="mode-emo">${m.emo}</div><div><div class="mode-name">${m.name}</div><div class="mode-desc">${m.desc}</div>${extraNote}</div>`;
+    if(!m.training&&!m.ranked){
+      const totalTr=getTotalTrophies();
+      const diffSteps=Math.floor(totalTr/100);
+      if(diffSteps>0){
+        const diffNote=document.createElement('div');
+        diffNote.style.cssText='font-size:10px;color:#e74c3c;margin-top:3px';
+        d.querySelector('div').innerHTML+=`<div style="font-size:10px;color:#e74c3c;margin-top:3px">🤖 Складність: +${diffSteps*5}% (🏆${totalTr})</div>`;
+      }
+    }
     d.onclick=()=>{
+      const wasTraining=S.selMode==='training';
       if(m.ranked){
         // Pick random allowed ranked sub-mode
         const allowedId=RANKED_MODES[Math.floor(Math.random()*RANKED_MODES.length)];
         S._rankedSubMode=allowedId;
       }
-      S.selMode=m.id;save();renderHome();
+      S.selMode=m.id;
+      // If leaving training mode, ensure selBrawler is one the player owns
+      if(wasTraining&&!m.training){
+        const selSv=getSave(S.selBrawler);
+        if(!selSv||!selSv.owned){
+          const firstOwned=S.brawlers.find(sb=>sb.owned);
+          if(firstOwned)S.selBrawler=firstOwned.id;
+        }
+      }
+      save();renderHome();
     };
     mc.appendChild(d);
   });
@@ -1106,8 +1138,13 @@ const keysDown={};
 function onKey(e,v){
   keysDown[e.key.toLowerCase()]=v;keysDown[e.code]=v;
   if(v&&e.key.toLowerCase()==='q'&&window.useGadget)window.useGadget();
-  if(v&&(e.key.toLowerCase()==='r'||e.key.toLowerCase()==='e')&&window.useSuper)window.useSuper();
+  if(v&&e.key.toLowerCase()==='e'&&window.useSuper)window.useSuper();
+  if(v&&e.key.toLowerCase()==='r'&&window.useSuper)window.useSuper();
   if(v&&e.key===' '){e.preventDefault();if(window._doShoot)window._doShoot();}
+  // Prevent default for game keys when in game
+  if(['w','a','s','d','q','e','r',' '].includes(e.key.toLowerCase())&&document.getElementById('gameScreen').style.display==='flex'){
+    if(e.key===' ')e.preventDefault();
+  }
 }
 // Attach keyboard listeners to document — always active
 document.addEventListener('keydown',e=>onKey(e,true));
@@ -1216,12 +1253,12 @@ function startRound(p2BrawlerOverride){
     document.getElementById('reloadInfo').textContent=ammo<b.maxAmmo?'Перезарядка '+(Math.round(reloadProg/b.reload*100))+'%':'';
   }
 
-  // AI difficulty
-  const aiDiff=getAIDiffMult();
+  // AI difficulty (training=no boost, ranked=elo-based, normal=trophy-based)
+  const aiDiff=getAIDiffMult(isTraining, isRanked);
 
   // Map selection
   let mapKey=S.selMode;
-  if(isRanked&&S._rankedSubModeObj)mapKey=S._rankedSubModeObj.id.replace(/ranked/,'brawl3');
+  if(isRanked&&S._rankedSubModeObj)mapKey=S._rankedSubModeObj.id;
   if(isTraining)mapKey='training';
   const mapDef=getMapForMode(mapKey);
 
@@ -1289,8 +1326,8 @@ function startRound(p2BrawlerOverride){
   const allEnts=()=>[...blueTeam,...redTeam];
 
   // ===== HEIST: safe HP =====
-  let blueSafeHp=10000, redSafeHp=10000;
-  const SAFE_MAX=10000;
+  let blueSafeHp=80000, redSafeHp=80000;
+  const SAFE_MAX=80000;
   const blueSafe={x:W*0.04,y:H/2-20,w:40,h:40,team:'blue'};
   const redSafe={x:W*0.88,y:H/2-20,w:40,h:40,team:'red'};
 
@@ -1299,13 +1336,19 @@ function startRound(p2BrawlerOverride){
   const GEM_WIN=10;
   let gems=[];
   let gemSpawnTimer=0;
-  const GEM_SPAWN_INTERVAL=180;
+  // First gem after 3s (180 frames@60fps), then every 7s (420 frames)
+  const GEM_FIRST_DELAY=180; // 3 seconds
+  const GEM_SPAWN_INTERVAL=420; // 7 seconds
+  let gemFirstSpawned=false;
   function spawnGem(){
-    const gx=W*0.3+Math.random()*W*0.4;
-    const gy=H*0.2+Math.random()*H*0.6;
-    gems.push({x:gx,y:gy,r:8,vx:(Math.random()-.5)*2,vy:(Math.random()-.5)*2,life:600});
+    // Spawn gem at center of map
+    const gx=W/2+(Math.random()-.5)*40;
+    const gy=H/2+(Math.random()-.5)*40;
+    gems.push({x:gx,y:gy,r:9,vx:(Math.random()-.5)*1.5,vy:(Math.random()-.5)*1.5,life:900});
   }
-  if(mode.gemgrab){for(let i=0;i<5;i++)spawnGem();}
+  // Blue win timer: when blue has >=10 gems, count 15s; same for red
+  let blueWinTimerStart=null, redWinTimerStart=null;
+  const GEM_HOLD_TIME=15000; // 15 seconds
   blueTeam.forEach(e=>e.gems=0);
   redTeam.forEach(e=>e.gems=0);
 
@@ -1314,14 +1357,18 @@ function startRound(p2BrawlerOverride){
   const ROBOT_BOLTS=10;
   let bolts=[];
   let boltSpawnTimer=0;
-  const BOLT_SPAWN_INTERVAL=200;
+  const BOLT_SPAWN_INTERVAL=180; // faster bolt spawn
   let blueRobot=null, redRobot=null;
-  const ROBOT_HP=5000;
+  const ROBOT_HP_BASE=4000; // base robot HP; scales with bolts collected
+  const ROBOT_HP_PER_BOLT=1500; // each extra bolt above minimum adds this HP
+  function getRobotHp(boltsCollected){return ROBOT_HP_BASE+boltsCollected*ROBOT_HP_PER_BOLT;}
   function spawnBolt(){
     bolts.push({x:W*0.35+Math.random()*W*0.3, y:H*0.2+Math.random()*H*0.6, r:8});
   }
   if(mode.siege){for(let i=0;i<4;i++)spawnBolt();}
-  let blueBaseHp=ROBOT_HP*2, redBaseHp=ROBOT_HP*2;
+  // Bases are tough
+  const BASE_HP=30000;
+  let blueBaseHp=BASE_HP, redBaseHp=BASE_HP;
 
   // Bush visibility helpers
   function inBush(e){
@@ -1525,8 +1572,16 @@ function startRound(p2BrawlerOverride){
       return null;
     }
     if(mode.gemgrab){
-      if(blueGems>=GEM_WIN)return'win';
-      if(redGems>=GEM_WIN)return'lose';
+      const nowC=Date.now();
+      // Both teams at 10+: whoever has more wins, or first to hold longer wins
+      if(blueWinTimerStart&&redWinTimerStart){
+        if(blueGems>redGems&&nowC-blueWinTimerStart>=GEM_HOLD_TIME)return'win';
+        if(redGems>blueGems&&nowC-redWinTimerStart>=GEM_HOLD_TIME)return'lose';
+        // equal gems — continue
+      } else {
+        if(blueWinTimerStart&&nowC-blueWinTimerStart>=GEM_HOLD_TIME)return'win';
+        if(redWinTimerStart&&nowC-redWinTimerStart>=GEM_HOLD_TIME)return'lose';
+      }
       return null;
     }
     if(mode.siege){
@@ -1544,6 +1599,32 @@ function startRound(p2BrawlerOverride){
     over=true;if(animId)cancelAnimationFrame(animId);
     const isTraining=S.selMode==='training';
     const isRanked=S.selMode==='ranked';
+    // Ranked and training bypass round-series logic entirely — only ELO/nothing
+    if(isTraining){
+      document.getElementById('resTitle').textContent=win?'🏆 Перемога!':'💀 Поразка';
+      document.getElementById('resSub').textContent='🤖 Тренування · Трофеї не змінено';
+      document.getElementById('resRewards').innerHTML='<div style="color:#2ecc71;font-size:13px">🎯 Тренувальний матч — трофеї не нараховуються</div>';
+      buildScoreboard();document.getElementById('resultOverlay').classList.add('show');return;
+    }
+    if(isRanked){
+      const oldElo=S.rankedElo||0;const eloChange=getRankedEloChange(oldElo,win);
+      S.rankedElo=Math.max(0,(S.rankedElo||0)+eloChange);
+      if(win)S.rankedWins=(S.rankedWins||0)+1;else S.rankedLosses=(S.rankedLosses||0)+1;
+      const{rank:newRank,level:newLevel}=getRankInfo(S.rankedElo);
+      const{rank:oldRank}=getRankInfo(oldElo);
+      const promoted=newRank.id!==oldRank.id&&S.rankedElo>oldElo;
+      save();upTopBar();
+      document.getElementById('resTitle').textContent=win?'🏆 Перемога!':'💀 Поразка';
+      document.getElementById('resSub').textContent=(win?'+':'')+eloChange+' Ело · Рейтинговий матч';
+      let rankedHtml=`<div style="background:#1a0a2e;border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:24px">${newRank.emo}</div>
+        <div style="color:${newRank.color};font-weight:700;font-size:15px">${newRank.name}${newRank.levels>1?' '+newLevel:''}</div>
+        <div style="color:#8878aa;font-size:12px;margin-top:4px">Ело: ${S.rankedElo}</div>
+        ${promoted?'<div style="color:#f1c40f;font-size:13px;font-weight:700;margin-top:6px">🎉 Підвищення рангу!</div>':''}
+      </div>`;
+      document.getElementById('resRewards').innerHTML=rankedHtml;
+      buildScoreboard();document.getElementById('resultOverlay').classList.add('show');return;
+    }
     // Handle rounds for duel and 3v3
     if(_roundState.maxRounds>1){
       if(win)_roundState.wins++;else _roundState.losses++;
@@ -1600,38 +1681,7 @@ function startRound(p2BrawlerOverride){
       document.getElementById('resultOverlay').classList.add('show');
       return;
     }
-    // Single-round modes (ffa, bounty, training, ranked)
-    if(isTraining){
-      document.getElementById('resTitle').textContent=win?'🏆 Перемога!':'💀 Поразка';
-      document.getElementById('resSub').textContent='🤖 Тренування · Трофеї не змінено';
-      document.getElementById('resRewards').innerHTML='<div style="color:#2ecc71;font-size:13px">🎯 Тренувальний матч — трофеї не нараховуються</div>';
-      buildScoreboard();
-      document.getElementById('resultOverlay').classList.add('show');
-      return;
-    }
-    if(isRanked){
-      const oldElo=S.rankedElo||0;
-      const eloChange=getRankedEloChange(oldElo,win);
-      S.rankedElo=Math.max(0,(S.rankedElo||0)+eloChange);
-      if(win)S.rankedWins=(S.rankedWins||0)+1;
-      else S.rankedLosses=(S.rankedLosses||0)+1;
-      const{rank:newRank,level:newLevel}=getRankInfo(S.rankedElo);
-      const{rank:oldRank}=getRankInfo(oldElo);
-      const promoted=newRank.id!==oldRank.id&&S.rankedElo>oldElo;
-      save();upTopBar();
-      document.getElementById('resTitle').textContent=win?'🏆 Перемога!':'💀 Поразка';
-      document.getElementById('resSub').textContent=(win?'+':'')+eloChange+' Ело · Рейтинговий матч';
-      let rankedHtml=`<div style="background:#1a0a2e;border-radius:8px;padding:10px;text-align:center">
-        <div style="font-size:24px">${newRank.emo}</div>
-        <div style="color:${newRank.color};font-weight:700;font-size:15px">${newRank.name}${newRank.levels>1?' '+newLevel:''}</div>
-        <div style="color:#8878aa;font-size:12px;margin-top:4px">Ело: ${S.rankedElo}</div>
-        ${promoted?`<div style="color:#f1c40f;font-size:13px;font-weight:700;margin-top:6px">🎉 Підвищення рангу!</div>`:''}
-      </div>`;
-      document.getElementById('resRewards').innerHTML=rankedHtml;
-      buildScoreboard();
-      document.getElementById('resultOverlay').classList.add('show');
-      return;
-    }
+    // Single-round modes (ffa, bounty)
     const sb2=getSave(S.selBrawler);const delta=getTrophyDelta(sb2.trophies,win);
     sb2.trophies=Math.max(0,sb2.trophies+delta);
     if(win){S.wins++;S.coins+=80;S.tickets+=20;}
@@ -1838,7 +1888,7 @@ function startRound(p2BrawlerOverride){
         // Respawn all after death (drop gems)
         allEnts().filter(e=>e.dead&&!e.respawnAt).forEach(e=>{
           if(e.gems>0){
-            for(let i=0;i<e.gems;i++)gems.push({x:e.x+(Math.random()-.5)*40,y:e.y+(Math.random()-.5)*40,r:8,life:400,vx:(Math.random()-.5)*3,vy:(Math.random()-.5)*3});
+            for(let i=0;i<e.gems;i++)gems.push({x:e.x+(Math.random()-.5)*40,y:e.y+(Math.random()-.5)*40,r:9,life:500,vx:(Math.random()-.5)*3,vy:(Math.random()-.5)*3});
             if(e.team==='blue')blueGems=Math.max(0,blueGems-e.gems);
             else redGems=Math.max(0,redGems-e.gems);
             e.gems=0;
@@ -1855,9 +1905,13 @@ function startRound(p2BrawlerOverride){
         // Gem physics
         gems.forEach(g=>{g.x+=g.vx;g.y+=g.vy;g.vx*=0.9;g.vy*=0.9;g.life--;});
         gems=gems.filter(g=>g.life>0&&g.x>0&&g.x<W&&g.y>0&&g.y<H);
-        // Spawn new gems
+        // Spawn gems: first after 3s, then every 7s, max 1 at a time (spawn one by one)
         gemSpawnTimer++;
-        if(gemSpawnTimer>GEM_SPAWN_INTERVAL&&gems.length<8){gemSpawnTimer=0;spawnGem();}
+        if(!gemFirstSpawned){
+          if(gemSpawnTimer>=GEM_FIRST_DELAY){gemFirstSpawned=true;gemSpawnTimer=0;spawnGem();}
+        } else {
+          if(gemSpawnTimer>=GEM_SPAWN_INTERVAL){gemSpawnTimer=0;spawnGem();}
+        }
         // Pick up gems
         allEnts().filter(e=>!e.dead).forEach(ent=>{
           for(let i=gems.length-1;i>=0;i--){
@@ -1870,11 +1924,23 @@ function startRound(p2BrawlerOverride){
             }
           }
         });
-        // Bots drop gems toward base — simplified: bots just carry & count
+        // Recalculate totals from carriers
         blueGems=blueTeam.reduce((a,e)=>a+(e.gems||0),0);
         redGems=redTeam.reduce((a,e)=>a+(e.gems||0),0);
-        document.getElementById('blueScore').textContent=blueGems;
-        document.getElementById('redScore').textContent=redGems;
+        // Win timer logic: team with >=10 gems starts 15s countdown
+        const nowW=Date.now();
+        if(blueGems>=GEM_WIN){
+          if(!blueWinTimerStart)blueWinTimerStart=nowW;
+        } else {
+          blueWinTimerStart=null;
+        }
+        if(redGems>=GEM_WIN){
+          if(!redWinTimerStart)redWinTimerStart=nowW;
+        } else {
+          redWinTimerStart=null;
+        }
+        document.getElementById('blueScore').textContent=blueGems+(blueWinTimerStart?'⏱':'/'+GEM_WIN);
+        document.getElementById('redScore').textContent=redGems+(redWinTimerStart?'⏱':'/'+GEM_WIN);
       }
 
       // ===== SIEGE UPDATE =====
@@ -1899,15 +1965,18 @@ function startRound(p2BrawlerOverride){
             }
           }
         });
-        // Build robots when enough bolts
+        // Build robots when enough bolts (HP scales with bolts saved)
         if(blueBolts>=ROBOT_BOLTS&&!blueRobot){
+          const robotHp=getRobotHp(blueBolts);
           blueBolts=0;
-          blueRobot={x:spawnBluePt.x+30,y:spawnBluePt.y,hp:ROBOT_HP,maxHp:ROBOT_HP,r:20,team:'blue',speed:1.2,shotT:0};
-          spawnFx(blueRobot.x,blueRobot.y-30,'🤖 Робот побудовано!','#3498db');
+          blueRobot={x:spawnBluePt.x+30,y:spawnBluePt.y,hp:robotHp,maxHp:robotHp,r:22,team:'blue',speed:1.0+robotHp/30000,shotT:0,dmg:600+Math.round(robotHp/100)};
+          spawnFx(blueRobot.x,blueRobot.y-30,'🤖 Робот побудовано! HP:'+robotHp,'#3498db');
         }
         if(redBolts>=ROBOT_BOLTS&&!redRobot){
+          const robotHp=getRobotHp(redBolts);
           redBolts=0;
-          redRobot={x:spawnRedPt.x-30,y:spawnRedPt.y,hp:ROBOT_HP,maxHp:ROBOT_HP,r:20,team:'red',speed:1.2,shotT:0};
+          redRobot={x:spawnRedPt.x-30,y:spawnRedPt.y,hp:robotHp,maxHp:robotHp,r:22,team:'red',speed:1.0+robotHp/30000,shotT:0,dmg:600+Math.round(robotHp/100)};
+          spawnFx(redRobot.x,redRobot.y-30,'🤖 Ворожий робот!','#e74c3c');
         }
         // Robot movement & attack
         function updateRobot(robot,targetX,targetBase){
@@ -1920,21 +1989,21 @@ function startRound(p2BrawlerOverride){
           robot.y=Math.max(robot.r,Math.min(H-robot.r,robot.y));
           // Attack nearby enemies
           robot.shotT++;
-          if(robot.shotT>60){
+          if(robot.shotT>45){
             robot.shotT=0;
             const enemies=allEnts().filter(e=>!e.dead&&e.team!==robot.team);
             enemies.forEach(en=>{
-              if(Math.hypot(en.x-robot.x,en.y-robot.y)<120){
-                en.hp=Math.max(0,en.hp-800);
-                spawnFx(en.x,en.y-18,'-800',robot.team==='blue'?'#3498db':'#e74c3c');
+              if(Math.hypot(en.x-robot.x,en.y-robot.y)<130){
+                en.hp=Math.max(0,en.hp-robot.dmg);
+                spawnFx(en.x,en.y-18,'-'+robot.dmg,robot.team==='blue'?'#3498db':'#e74c3c');
                 if(en.hp<=0&&!en.dead){en.dead=true;}
               }
             });
           }
-          // Damage enemy base
-          if(Math.abs(robot.x-targetX)<60){
-            if(robot.team==='blue')redBaseHp=Math.max(0,redBaseHp-80);
-            else blueBaseHp=Math.max(0,blueBaseHp-80);
+          // Damage enemy base (robots deal serious damage)
+          if(Math.abs(robot.x-targetX)<80){
+            if(robot.team==='blue')redBaseHp=Math.max(0,redBaseHp-120);
+            else blueBaseHp=Math.max(0,blueBaseHp-120);
             spawnFx(robot.x,robot.y-25,'💥 Атака бази!',robot.team==='blue'?'#3498db':'#e74c3c');
           }
           return robot.hp>0?robot:null;
@@ -2029,15 +2098,20 @@ function startRound(p2BrawlerOverride){
     if(mode.gemgrab){
       gems.forEach(g=>{
         ctx.save();ctx.globalAlpha=Math.min(1,g.life/60);
-        ctx.font='16px serif';ctx.textAlign='center';ctx.fillText('💎',g.x,g.y+6);
+        ctx.font='18px serif';ctx.textAlign='center';ctx.fillText('💎',g.x,g.y+6);
         ctx.restore();
       });
-      // Gem count HUD
-      ctx.save();ctx.fillStyle='rgba(0,0,0,0.55)';ctx.fillRect(W/2-70,4,140,18);
+      // Gem count HUD with win timer
+      ctx.save();ctx.fillStyle='rgba(0,0,0,0.65)';ctx.fillRect(W/2-85,2,170,22);
       ctx.font='bold 11px sans-serif';ctx.textAlign='center';
-      ctx.fillStyle='#3498db';ctx.fillText('💎 '+blueGems+'/'+GEM_WIN,W/2-28,17);
-      ctx.fillStyle='#8878aa';ctx.fillText('vs',W/2,17);
-      ctx.fillStyle='#e74c3c';ctx.fillText(redGems+'/'+GEM_WIN+' 💎',W/2+28,17);
+      const nowHUD=Date.now();
+      const blueTimerSec=blueWinTimerStart?Math.max(0,Math.ceil((GEM_HOLD_TIME-(nowHUD-blueWinTimerStart))/1000)):null;
+      const redTimerSec=redWinTimerStart?Math.max(0,Math.ceil((GEM_HOLD_TIME-(nowHUD-redWinTimerStart))/1000)):null;
+      const blueLabel='💎 '+blueGems+(blueTimerSec!==null?' ⏱'+blueTimerSec+'с':'');
+      const redLabel=(redTimerSec!==null?'⏱'+redTimerSec+'с ':'')+redGems+' 💎';
+      ctx.fillStyle='#3498db';ctx.fillText(blueLabel,W/2-32,18);
+      ctx.fillStyle='#8878aa';ctx.fillText('vs',W/2,18);
+      ctx.fillStyle='#e74c3c';ctx.fillText(redLabel,W/2+35,18);
       ctx.restore();
       // Draw gem count above player
       if(!P.dead&&P.gems>0){
@@ -2064,9 +2138,9 @@ function startRound(p2BrawlerOverride){
       // Base HP bars
       ctx.save();
       ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(4,H-16,W*0.12-8,8);
-      ctx.fillStyle='#3498db';ctx.fillRect(4,H-16,(W*0.12-8)*(blueBaseHp/(ROBOT_HP*2)),8);
+      ctx.fillStyle='#3498db';ctx.fillRect(4,H-16,(W*0.12-8)*(blueBaseHp/BASE_HP),8);
       ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(W*0.88+4,H-16,W*0.12-8,8);
-      ctx.fillStyle='#e74c3c';ctx.fillRect(W*0.88+4,H-16,(W*0.12-8)*(redBaseHp/(ROBOT_HP*2)),8);
+      ctx.fillStyle='#e74c3c';ctx.fillRect(W*0.88+4,H-16,(W*0.12-8)*(redBaseHp/BASE_HP),8);
       ctx.restore();
       // Draw robots
       [blueRobot,redRobot].forEach(robot=>{
@@ -2169,9 +2243,10 @@ function startRound(p2BrawlerOverride){
     }
     // AI difficulty indicator
     if(aiDiff>1){
-      ctx.save();ctx.fillStyle='rgba(0,0,0,0.4)';ctx.fillRect(W-90,4,86,14);
+      ctx.save();ctx.fillStyle='rgba(0,0,0,0.4)';ctx.fillRect(W-110,4,106,14);
       ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillStyle='#e74c3c';
-      ctx.fillText('🤖 ШІ: '+Math.round((aiDiff-1)*100)+'% сильніший',W-47,15);
+      const diffLabel=isRanked?('Ело '+Math.round(S.rankedElo||0)):('🏆'+getTotalTrophies());
+      ctx.fillText('🤖 +'+Math.round((aiDiff-1)*100)+'% ('+diffLabel+')',W-57,15);
       ctx.restore();
     }
     // Map name
