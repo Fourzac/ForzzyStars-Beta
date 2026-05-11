@@ -321,8 +321,8 @@ input[type=text]:focus{outline:none;border-color:#a855f7}
   <!-- Auto-aim shoot button (right side) -->
   <div id="aimZone" style="display:none"></div>
   <div id="shootZone" style="position:absolute;right:12px;bottom:100px;z-index:52;display:none;flex-direction:column;align-items:center;gap:10px">
-    <div id="gadgetMobile" onclick="useGadget()" style="width:54px;height:54px;border-radius:50%;background:rgba(168,85,247,.4);border:3px solid #a855f7;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer">🔧</div>
-    <div id="superMobile" onclick="useSuper()" style="width:54px;height:54px;border-radius:50%;background:rgba(231,76,60,.3);border:3px solid #e74c3c;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;opacity:.4">⚡</div>
+    <div id="gadgetMobile" style="width:54px;height:54px;border-radius:50%;background:rgba(168,85,247,.4);border:3px solid #a855f7;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;touch-action:none">🔧</div>
+    <div id="superMobile" style="width:54px;height:54px;border-radius:50%;background:rgba(231,76,60,.3);border:3px solid #e74c3c;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;opacity:.4;touch-action:none">⚡</div>
     <div id="autoShootBtn" style="width:80px;height:80px;border-radius:50%;background:rgba(241,196,15,.35);border:4px solid rgba(241,196,15,.8);display:flex;align-items:center;justify-content:center;font-size:32px;cursor:pointer;user-select:none;touch-action:none">🎯</div>
   </div>
   <div class="result-overlay" id="resultOverlay">
@@ -877,38 +877,39 @@ const CHESTS=[
   {id:'epic',name:'Епічна скриня',emo:'💜',color:'#8e44ad',cost:500,items:5,brawlerChance:0.5,desc:'5 предметів, шанс бійця'},
   {id:'legendary',name:'Легендарна скриня',emo:'⭐',color:'#f1c40f',cost:1500,items:8,brawlerChance:1,desc:'8 предметів + гарантований боєць'},
 ];
-// Small chest (rare/epic): coins up to 200, gems up to 10, small tickets
-const CHEST_REWARDS_POOL_SMALL=[
-  {type:'coins',emo:'🪙',name:'+50 монет',val:50,w:30},
-  {type:'coins',emo:'🪙',name:'+100 монет',val:100,w:35},
-  {type:'coins',emo:'🪙',name:'+200 монет',val:200,w:20},
-  {type:'gems',emo:'💎',name:'+2 кристали',val:2,w:20},
-  {type:'gems',emo:'💎',name:'+5 кристалів',val:5,w:15},
-  {type:'gems',emo:'💎',name:'+10 кристалів',val:10,w:5},
-  {type:'tickets',emo:'🎟',name:'+10 білетів',val:10,w:20},
-  {type:'tickets',emo:'🎟',name:'+30 білетів',val:30,w:10},
+const CHEST_REWARDS_POOL_RARE=[
+  {type:'coins',emo:'🪙',name:'+50 монет',val:50,w:35},
+  {type:'coins',emo:'🪙',name:'+100 монет',val:100,w:30},
+  {type:'coins',emo:'🪙',name:'+200 монет',val:200,w:15},
+  {type:'gems',emo:'💎',name:'+3 кристали',val:3,w:12},
+  {type:'gems',emo:'💎',name:'+7 кристалів',val:7,w:5},
+  {type:'tickets',emo:'🎟',name:'+20 білетів',val:20,w:20},
+  {type:'tickets',emo:'🎟',name:'+50 білетів',val:50,w:8},
 ];
-// Legendary chest: coins from 500+, gems from 10 to 20, generous tickets
+const CHEST_REWARDS_POOL_EPIC=[
+  {type:'coins',emo:'🪙',name:'+200 монет',val:200,w:30},
+  {type:'coins',emo:'🪙',name:'+500 монет',val:500,w:20},
+  {type:'coins',emo:'🪙',name:'+800 монет',val:800,w:8},
+  {type:'gems',emo:'💎',name:'+8 кристалів',val:8,w:20},
+  {type:'gems',emo:'💎',name:'+15 кристалів',val:15,w:8},
+  {type:'tickets',emo:'🎟',name:'+50 білетів',val:50,w:18},
+  {type:'tickets',emo:'🎟',name:'+100 білетів',val:100,w:6},
+];
 const CHEST_REWARDS_POOL_LEGENDARY=[
   {type:'coins',emo:'🪙',name:'+500 монет',val:500,w:30},
-  {type:'coins',emo:'🪙',name:'+800 монет',val:800,w:25},
-  {type:'coins',emo:'🪙',name:'+1200 монет',val:1200,w:15},
-  {type:'gems',emo:'💎',name:'+10 кристалів',val:10,w:25},
-  {type:'gems',emo:'💎',name:'+15 кристалів',val:15,w:15},
-  {type:'gems',emo:'💎',name:'+20 кристалів',val:20,w:8},
-  {type:'tickets',emo:'🎟',name:'+80 білетів',val:80,w:15},
-  {type:'tickets',emo:'🎟',name:'+150 білетів',val:150,w:8},
+  {type:'coins',emo:'🪙',name:'+800 монет',val:800,w:22},
+  {type:'coins',emo:'🪙',name:'+1200 монет',val:1200,w:12},
+  {type:'gems',emo:'💎',name:'+10 кристалів',val:10,w:20},
+  {type:'gems',emo:'💎',name:'+15 кристалів',val:15,w:10},
+  {type:'gems',emo:'💎',name:'+20 кристалів',val:20,w:5},
+  {type:'tickets',emo:'🎟',name:'+100 білетів',val:100,w:18},
+  {type:'tickets',emo:'🎟',name:'+200 білетів',val:200,w:6},
 ];
-// Default pool kept for epic chest (mid-tier)
-const CHEST_REWARDS_POOL=[
-  {type:'coins',emo:'🪙',name:'+100 монет',val:100,w:30},
-  {type:'coins',emo:'🪙',name:'+300 монет',val:300,w:25},
-  {type:'coins',emo:'🪙',name:'+600 монет',val:600,w:10},
-  {type:'gems',emo:'💎',name:'+5 кристалів',val:5,w:20},
-  {type:'gems',emo:'💎',name:'+10 кристалів',val:10,w:10},
-  {type:'tickets',emo:'🎟',name:'+30 білетів',val:30,w:20},
-  {type:'tickets',emo:'🎟',name:'+80 білетів',val:80,w:8},
-];
+function getChestPool(chestId){
+  if(chestId==='legendary')return CHEST_REWARDS_POOL_LEGENDARY;
+  if(chestId==='epic')return CHEST_REWARDS_POOL_EPIC;
+  return CHEST_REWARDS_POOL_RARE;
+}
 function weightedRandom(pool){
   const total=pool.reduce((a,x)=>a+x.w,0);let r=Math.random()*total;
   for(const x of pool){r-=x.w;if(r<=0)return x;}return pool[0];
@@ -935,7 +936,8 @@ function openChestById(id,deduct=false){
     S.tickets-=ch.cost;
   }
   const rewards=[];
-  for(let i=0;i<ch.items;i++) rewards.push(weightedRandom(CHEST_REWARDS_POOL));
+  const pool=getChestPool(ch.id);
+  for(let i=0;i<ch.items;i++) rewards.push(weightedRandom(pool));
   const locked=BRAWLERS.filter(b=>!getSave(b.id).owned);
   let gotBrawler=null;
   if(ch.brawlerChance>=1||(locked.length>0&&Math.random()<ch.brawlerChance)){
@@ -1294,25 +1296,20 @@ function startRound(p2BrawlerOverride){
   const spawnBluePt=mapDef.spawnBlue?mapDef.spawnBlue(W,H):{x:W*0.15,y:H/2};
   const spawnRedPt=mapDef.spawnRed?mapDef.spawnRed(W,H):{x:W*0.85,y:H/2};
 
-  // Safe spawn: finds a position not inside any wall, starting from hint
-  function safeSpawnPos(hintX,hintY,r){
-    function insideWall(x,y){return WALLS.some(w=>x+r>w.x&&x-r<w.x+w.w&&y+r>w.y&&y-r<w.y+w.h);}
-    if(!insideWall(hintX,hintY))return{x:hintX,y:hintY};
-    // Try expanding rings around hint
-    for(let step=10;step<=200;step+=10){
-      for(let angle=0;angle<Math.PI*2;angle+=0.35){
-        const tx=hintX+Math.cos(angle)*step;
-        const ty=hintY+Math.sin(angle)*step;
-        if(tx>r&&tx<W-r&&ty>r&&ty<H-r&&!insideWall(tx,ty))return{x:tx,y:ty};
-      }
+  // Safe spawn: find a position near (ox,oy) that is not inside a wall
+  function safeSpawn(ox,oy,r){
+    if(!wallBlock(ox,oy,r,false))return{x:ox,y:oy};
+    const tries=[[0,-40],[0,40],[-40,0],[40,0],[-60,-60],[60,-60],[-60,60],[60,60],[0,-80],[0,80],[-80,0],[80,0]];
+    for(const[dx,dy]of tries){
+      const nx=clamp(ox+dx,r+2,W-r-2);const ny=clamp(oy+dy,r+2,H-r-2);
+      if(!wallBlock(nx,ny,r,false))return{x:nx,y:ny};
     }
-    // Fallback: random safe position
-    for(let attempt=0;attempt<100;attempt++){
-      const tx=r+Math.random()*(W-r*2);
-      const ty=r+Math.random()*(H-r*2);
-      if(!insideWall(tx,ty))return{x:tx,y:ty};
+    // Fallback: random scan
+    for(let i=0;i<50;i++){
+      const nx=r+Math.random()*(W-r*2);const ny=r+Math.random()*(H-r*2);
+      if(!wallBlock(nx,ny,r,false))return{x:nx,y:ny};
     }
-    return{x:hintX,y:hintY};
+    return{x:ox,y:oy};
   }
 
   // Entities
@@ -1326,17 +1323,17 @@ function startRound(p2BrawlerOverride){
       superCharge:0,frozenUntil:0,respawnAt:0};
   }
   const blueTeam=[],redTeam=[];
-  const _psafe=safeSpawnPos(spawnBluePt.x,spawnBluePt.y,16);
-  const P={x:_psafe.x,y:_psafe.y,hp:pHp,maxHp:pHp,r:16,speed:b.speed,b,dmg:pDmg,color:b.color,face:0,team:'blue',isPlayer:true,dead:false};
+  const _pSp=safeSpawn(spawnBluePt.x,spawnBluePt.y,16);
+  const P={x:_pSp.x,y:_pSp.y,hp:pHp,maxHp:pHp,r:16,speed:b.speed,b,dmg:pDmg,color:b.color,face:0,team:'blue',isPlayer:true,dead:false};
   blueTeam.push(P);
   const ownedBrawlers=S.brawlers.filter(s=>s.owned).map(s=>getBrawler(s.id)).filter(Boolean);
-  // Training: bots use all brawlers; otherwise only brawlers the player has unlocked
-  const botBrawlerPool=isTraining?BRAWLERS:(ownedBrawlers.length>0?ownedBrawlers:BRAWLERS.slice(0,3));
+  // Training: bots use all brawlers; Normal: only owned brawlers (min 1 fallback)
+  const botBrawlerPool=(isTraining||ownedBrawlers.length===0)?BRAWLERS:ownedBrawlers;
   function randBrawler(){return botBrawlerPool[Math.floor(Math.random()*botBrawlerPool.length)]||BRAWLERS[0];}
 
   if(mode.team||mode.bounty||mode.heist||mode.gemgrab||mode.siege){
-    for(let i=0;i<2;i++){const _bs=safeSpawnPos(spawnBluePt.x,(i+1)*H/3,16);blueTeam.push(mkBot(randBrawler(),_bs.x,_bs.y,'blue'));}
-    for(let i=0;i<3;i++){const _rs=safeSpawnPos(spawnRedPt.x,(i+0.5)*H/4,16);redTeam.push(mkBot(randBrawler(),_rs.x,_rs.y,'red'));}
+    for(let i=0;i<2;i++){const _sp=safeSpawn(spawnBluePt.x,(i+1)*H/3,16);blueTeam.push(mkBot(randBrawler(),_sp.x,_sp.y,'blue'));}
+    for(let i=0;i<3;i++){const _sp=safeSpawn(spawnRedPt.x,(i+0.5)*H/4,16);redTeam.push(mkBot(randBrawler(),_sp.x,_sp.y,'red'));}
     document.getElementById('eLabel').textContent='Команда 🟥';
     document.getElementById('teamScore').style.display='flex';
     let modeLabel=mode.bounty?'💀 Полювач (10 вбивств)':mode.heist?'🏦 Пограбування — знищ сейф!':mode.gemgrab?'💎 Кристали — збери '+GEM_WIN:mode.siege?'🔩 Облога — збери '+ROBOT_BOLTS+' болтів':'3 на 3';
@@ -1353,8 +1350,8 @@ function startRound(p2BrawlerOverride){
       let bx,by;
       if(ffaSpawns&&ffaSpawns[i]){bx=ffaSpawns[i].x;by=ffaSpawns[i].y;}
       else{bx=W*(0.2+Math.random()*0.6);by=H*(0.1+Math.random()*0.8);}
-      const _ffas=safeSpawnPos(bx,by,16);bx=_ffas.x;by=_ffas.y;
-      const bot=mkBot(botB,bx,by,'ffa'+i);
+      const _ffaSp=safeSpawn(bx,by,16);
+      const bot=mkBot(botB,_ffaSp.x,_ffaSp.y,'ffa'+i);
       bot.color=ffaColors[i%ffaColors.length];
       redTeam.push(bot);
     }
@@ -1363,7 +1360,8 @@ function startRound(p2BrawlerOverride){
   } else {
     // Duel
     const eb=p2BrawlerOverride?getBrawler(p2BrawlerOverride):randBrawler();
-    const _ds=safeSpawnPos(spawnRedPt.x,spawnRedPt.y,16);redTeam.push(mkBot(eb||BRAWLERS[0],_ds.x,_ds.y,'red'));
+    const _redSp=safeSpawn(spawnRedPt.x,spawnRedPt.y,16);
+    redTeam.push(mkBot(eb||BRAWLERS[0],_redSp.x,_redSp.y,'red'));
     document.getElementById('eLabel').textContent=(eb?eb.emo+' '+eb.name:'Бот');
     document.getElementById('teamScore').style.display='none';
   }
@@ -1473,6 +1471,19 @@ function startRound(p2BrawlerOverride){
     jKnob.style.left=(40+cx)+'px';jKnob.style.top=(40+cy)+'px';jDX=dx/len;jDY=dy/len;
   },{passive:false});
   jZone.addEventListener('touchend',()=>{jActive=false;jDX=0;jDY=0;jBase.style.display='none';});
+
+  // Mobile HUD top buttons — gadget & super
+  if(isMobile){
+    const gadgetBtnEl=document.getElementById('gadgetBtn');
+    const superBtnEl=document.getElementById('superBtnHud');
+    gadgetBtnEl.addEventListener('touchstart',e=>{e.preventDefault();if(window.useGadget)window.useGadget();},{passive:false});
+    superBtnEl.addEventListener('touchstart',e=>{e.preventDefault();if(window.useSuper)window.useSuper();},{passive:false});
+    // Bottom mobile buttons
+    const gadgetMobEl=document.getElementById('gadgetMobile');
+    const superMobEl=document.getElementById('superMobile');
+    if(gadgetMobEl)gadgetMobEl.addEventListener('touchstart',e=>{e.preventDefault();if(window.useGadget)window.useGadget();},{passive:false});
+    if(superMobEl)superMobEl.addEventListener('touchstart',e=>{e.preventDefault();if(window.useSuper)window.useSuper();},{passive:false});
+  }
 
   // Auto-aim
   let aActive=false,aDX=0,aDY=0;
