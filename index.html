@@ -145,7 +145,7 @@ input[type=text]:focus{outline:none;border-color:#a855f7}
 <!-- HOME -->
 <div id="homeScreen" class="screen active">
   <div class="topbar">
-    <span class="tb-title">⚡ ForzzyStars (1.2 Beta 2)</span>
+    <span class="tb-title">⚡ Brawl JS</span>
     <div class="pills">
       <span class="pill p-trophy" id="hTrophy">🏆 0</span>
       <span class="pill p-gems" id="hGems">💎 120</span>
@@ -877,14 +877,37 @@ const CHESTS=[
   {id:'epic',name:'Епічна скриня',emo:'💜',color:'#8e44ad',cost:500,items:5,brawlerChance:0.5,desc:'5 предметів, шанс бійця'},
   {id:'legendary',name:'Легендарна скриня',emo:'⭐',color:'#f1c40f',cost:1500,items:8,brawlerChance:1,desc:'8 предметів + гарантований боєць'},
 ];
+// Small chest (rare/epic): coins up to 200, gems up to 10, small tickets
+const CHEST_REWARDS_POOL_SMALL=[
+  {type:'coins',emo:'🪙',name:'+50 монет',val:50,w:30},
+  {type:'coins',emo:'🪙',name:'+100 монет',val:100,w:35},
+  {type:'coins',emo:'🪙',name:'+200 монет',val:200,w:20},
+  {type:'gems',emo:'💎',name:'+2 кристали',val:2,w:20},
+  {type:'gems',emo:'💎',name:'+5 кристалів',val:5,w:15},
+  {type:'gems',emo:'💎',name:'+10 кристалів',val:10,w:5},
+  {type:'tickets',emo:'🎟',name:'+10 білетів',val:10,w:20},
+  {type:'tickets',emo:'🎟',name:'+30 білетів',val:30,w:10},
+];
+// Legendary chest: coins from 500+, gems from 10 to 20, generous tickets
+const CHEST_REWARDS_POOL_LEGENDARY=[
+  {type:'coins',emo:'🪙',name:'+500 монет',val:500,w:30},
+  {type:'coins',emo:'🪙',name:'+800 монет',val:800,w:25},
+  {type:'coins',emo:'🪙',name:'+1200 монет',val:1200,w:15},
+  {type:'gems',emo:'💎',name:'+10 кристалів',val:10,w:25},
+  {type:'gems',emo:'💎',name:'+15 кристалів',val:15,w:15},
+  {type:'gems',emo:'💎',name:'+20 кристалів',val:20,w:8},
+  {type:'tickets',emo:'🎟',name:'+80 білетів',val:80,w:15},
+  {type:'tickets',emo:'🎟',name:'+150 білетів',val:150,w:8},
+];
+// Default pool kept for epic chest (mid-tier)
 const CHEST_REWARDS_POOL=[
-  {type:'coins',emo:'🪙',name:'+200 монет',val:200,w:40},
-  {type:'coins',emo:'🪙',name:'+500 монет',val:500,w:25},
-  {type:'coins',emo:'🪙',name:'+1000 монет',val:1000,w:10},
-  {type:'gems',emo:'💎',name:'+10 кристалів',val:10,w:20},
-  {type:'gems',emo:'💎',name:'+25 кристалів',val:25,w:8},
-  {type:'tickets',emo:'🎟',name:'+50 білетів',val:50,w:15},
-  {type:'tickets',emo:'🎟',name:'+150 білетів',val:150,w:5},
+  {type:'coins',emo:'🪙',name:'+100 монет',val:100,w:30},
+  {type:'coins',emo:'🪙',name:'+300 монет',val:300,w:25},
+  {type:'coins',emo:'🪙',name:'+600 монет',val:600,w:10},
+  {type:'gems',emo:'💎',name:'+5 кристалів',val:5,w:20},
+  {type:'gems',emo:'💎',name:'+10 кристалів',val:10,w:10},
+  {type:'tickets',emo:'🎟',name:'+30 білетів',val:30,w:20},
+  {type:'tickets',emo:'🎟',name:'+80 білетів',val:80,w:8},
 ];
 function weightedRandom(pool){
   const total=pool.reduce((a,x)=>a+x.w,0);let r=Math.random()*total;
@@ -1271,6 +1294,27 @@ function startRound(p2BrawlerOverride){
   const spawnBluePt=mapDef.spawnBlue?mapDef.spawnBlue(W,H):{x:W*0.15,y:H/2};
   const spawnRedPt=mapDef.spawnRed?mapDef.spawnRed(W,H):{x:W*0.85,y:H/2};
 
+  // Safe spawn: finds a position not inside any wall, starting from hint
+  function safeSpawnPos(hintX,hintY,r){
+    function insideWall(x,y){return WALLS.some(w=>x+r>w.x&&x-r<w.x+w.w&&y+r>w.y&&y-r<w.y+w.h);}
+    if(!insideWall(hintX,hintY))return{x:hintX,y:hintY};
+    // Try expanding rings around hint
+    for(let step=10;step<=200;step+=10){
+      for(let angle=0;angle<Math.PI*2;angle+=0.35){
+        const tx=hintX+Math.cos(angle)*step;
+        const ty=hintY+Math.sin(angle)*step;
+        if(tx>r&&tx<W-r&&ty>r&&ty<H-r&&!insideWall(tx,ty))return{x:tx,y:ty};
+      }
+    }
+    // Fallback: random safe position
+    for(let attempt=0;attempt<100;attempt++){
+      const tx=r+Math.random()*(W-r*2);
+      const ty=r+Math.random()*(H-r*2);
+      if(!insideWall(tx,ty))return{x:tx,y:ty};
+    }
+    return{x:hintX,y:hintY};
+  }
+
   // Entities
   function mkBot(brawlerDef,x,y,team){
     const bpm=getPowerMult(1+(Math.floor(Math.random()*3)));
@@ -1282,16 +1326,17 @@ function startRound(p2BrawlerOverride){
       superCharge:0,frozenUntil:0,respawnAt:0};
   }
   const blueTeam=[],redTeam=[];
-  const P={x:spawnBluePt.x,y:spawnBluePt.y,hp:pHp,maxHp:pHp,r:16,speed:b.speed,b,dmg:pDmg,color:b.color,face:0,team:'blue',isPlayer:true,dead:false};
+  const _psafe=safeSpawnPos(spawnBluePt.x,spawnBluePt.y,16);
+  const P={x:_psafe.x,y:_psafe.y,hp:pHp,maxHp:pHp,r:16,speed:b.speed,b,dmg:pDmg,color:b.color,face:0,team:'blue',isPlayer:true,dead:false};
   blueTeam.push(P);
   const ownedBrawlers=S.brawlers.filter(s=>s.owned).map(s=>getBrawler(s.id)).filter(Boolean);
-  // Training: bots use all brawlers; otherwise owned brawlers
-  const botBrawlerPool=isTraining?BRAWLERS:ownedBrawlers;
+  // Training: bots use all brawlers; otherwise only brawlers the player has unlocked
+  const botBrawlerPool=isTraining?BRAWLERS:(ownedBrawlers.length>0?ownedBrawlers:BRAWLERS.slice(0,3));
   function randBrawler(){return botBrawlerPool[Math.floor(Math.random()*botBrawlerPool.length)]||BRAWLERS[0];}
 
   if(mode.team||mode.bounty||mode.heist||mode.gemgrab||mode.siege){
-    for(let i=0;i<2;i++) blueTeam.push(mkBot(randBrawler(),spawnBluePt.x,(i+1)*H/3,'blue'));
-    for(let i=0;i<3;i++) redTeam.push(mkBot(randBrawler(),spawnRedPt.x,(i+0.5)*H/4,'red'));
+    for(let i=0;i<2;i++){const _bs=safeSpawnPos(spawnBluePt.x,(i+1)*H/3,16);blueTeam.push(mkBot(randBrawler(),_bs.x,_bs.y,'blue'));}
+    for(let i=0;i<3;i++){const _rs=safeSpawnPos(spawnRedPt.x,(i+0.5)*H/4,16);redTeam.push(mkBot(randBrawler(),_rs.x,_rs.y,'red'));}
     document.getElementById('eLabel').textContent='Команда 🟥';
     document.getElementById('teamScore').style.display='flex';
     let modeLabel=mode.bounty?'💀 Полювач (10 вбивств)':mode.heist?'🏦 Пограбування — знищ сейф!':mode.gemgrab?'💎 Кристали — збери '+GEM_WIN:mode.siege?'🔩 Облога — збери '+ROBOT_BOLTS+' болтів':'3 на 3';
@@ -1308,6 +1353,7 @@ function startRound(p2BrawlerOverride){
       let bx,by;
       if(ffaSpawns&&ffaSpawns[i]){bx=ffaSpawns[i].x;by=ffaSpawns[i].y;}
       else{bx=W*(0.2+Math.random()*0.6);by=H*(0.1+Math.random()*0.8);}
+      const _ffas=safeSpawnPos(bx,by,16);bx=_ffas.x;by=_ffas.y;
       const bot=mkBot(botB,bx,by,'ffa'+i);
       bot.color=ffaColors[i%ffaColors.length];
       redTeam.push(bot);
@@ -1317,7 +1363,7 @@ function startRound(p2BrawlerOverride){
   } else {
     // Duel
     const eb=p2BrawlerOverride?getBrawler(p2BrawlerOverride):randBrawler();
-    redTeam.push(mkBot(eb||BRAWLERS[0],spawnRedPt.x,spawnRedPt.y,'red'));
+    const _ds=safeSpawnPos(spawnRedPt.x,spawnRedPt.y,16);redTeam.push(mkBot(eb||BRAWLERS[0],_ds.x,_ds.y,'red'));
     document.getElementById('eLabel').textContent=(eb?eb.emo+' '+eb.name:'Бот');
     document.getElementById('teamScore').style.display='none';
   }
