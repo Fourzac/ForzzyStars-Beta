@@ -653,7 +653,7 @@ function getPowerMult(power){return 1+(power-1)*0.1;}
 // AI difficulty multiplier
 // Training mode: always 1 (no boost)
 // Ranked mode: based on ELO (+5% per 300 elo)
-// Normal modes: based on total trophies (+5% per 100 trophies)
+// Normal modes: based on selected brawler's trophies (+5% per 100 trophies)
 function getAIDiffMult(isTraining, isRanked){
   if(isTraining) return 1;
   if(isRanked){
@@ -661,9 +661,15 @@ function getAIDiffMult(isTraining, isRanked){
     const steps=Math.floor(elo/300);
     return 1+steps*0.05;
   }
-  const total=getTotalTrophies();
-  const steps=Math.floor(total/100);
+  const sb=getSave(S.selBrawler);
+  const trophies=sb?sb.trophies:0;
+  const steps=Math.floor(trophies/100);
   return 1+steps*0.05;
+}
+// Extra HP per difficulty level (+100 HP per 5% step above 1)
+function getDiffExtraHp(aiDiff){
+  const steps=Math.round((aiDiff-1)/0.05);
+  return steps*100;
 }
 
 function upTopBar(){
@@ -1157,16 +1163,18 @@ function mpStartGame(p2brawler){mpChannel.postMessage({type:'start',p2brawler});
 
 // ===== GLOBAL KEYBOARD =====
 const keysDown={};
+const GAME_KEYS=new Set(['w','a','s','d','q','e','r',' ','arrowup','arrowdown','arrowleft','arrowright']);
 function onKey(e,v){
-  keysDown[e.key.toLowerCase()]=v;keysDown[e.code]=v;
-  if(v&&e.key.toLowerCase()==='q'&&window.useGadget)window.useGadget();
-  if(v&&e.key.toLowerCase()==='e'&&window.useSuper)window.useSuper();
-  if(v&&e.key.toLowerCase()==='r'&&window.useSuper)window.useSuper();
-  if(v&&e.key===' '){e.preventDefault();if(window._doShoot)window._doShoot();}
-  // Prevent default for game keys when in game
-  if(['w','a','s','d','q','e','r',' '].includes(e.key.toLowerCase())&&document.getElementById('gameScreen').style.display==='flex'){
-    if(e.key===' ')e.preventDefault();
+  const k=e.key.toLowerCase();
+  keysDown[k]=v;keysDown[e.code]=v;
+  // Prevent default for all game keys to stop browser scroll/other actions
+  if(GAME_KEYS.has(k)&&document.getElementById('gameScreen').style.display==='flex'){
+    e.preventDefault();
   }
+  if(v&&k==='q'&&window.useGadget)window.useGadget();
+  if(v&&k==='e'&&window.useSuper)window.useSuper();
+  if(v&&k==='r'&&window.useSuper)window.useSuper();
+  if(v&&k===' '){if(window._doShoot)window._doShoot();}
 }
 // Attach keyboard listeners to document — always active
 document.addEventListener('keydown',e=>onKey(e,true));
@@ -1180,6 +1188,8 @@ let _roundState={wins:0,losses:0,round:1,maxRounds:3,active:false};
 
 function restartGame(){
   document.getElementById('resultOverlay').classList.remove('show');
+  // Clear any stuck keys
+  Object.keys(keysDown).forEach(k=>delete keysDown[k]);
   // If we're in a multi-round mode and series is still going, continue
   if(_roundState.active){
     startRound(_lastP2Override);
