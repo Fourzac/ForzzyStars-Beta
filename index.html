@@ -137,6 +137,26 @@ input[type=text]:focus{outline:none;border-color:#a855f7}
 .rank-progress-row{display:flex;justify-content:space-between;font-size:11px;color:#8878aa;margin-top:3px}
 .training-note{background:#1a2e1a;border:1px solid #2ecc71;border-radius:8px;padding:8px 12px;font-size:12px;color:#2ecc71;margin-bottom:10px}
 .ranked-note{background:#1a0a2e;border:1px solid #f1c40f;border-radius:8px;padding:8px 12px;font-size:12px;color:#f1c40f;margin-bottom:10px}
+/* Ranked tab */
+.rank-hero{border-radius:18px;padding:20px;text-align:center;margin-bottom:14px;position:relative;overflow:hidden}
+.rank-hero-emo{font-size:72px;line-height:1;margin-bottom:8px;display:block}
+.rank-hero-name{font-size:22px;font-weight:800;letter-spacing:.3px;margin-bottom:2px}
+.rank-hero-elo{font-size:32px;font-weight:700;margin:4px 0}
+.rank-hero-stats{display:flex;justify-content:center;gap:24px;margin-top:14px}
+.rank-hero-stat{text-align:center}
+.rank-hero-stat-val{font-size:20px;font-weight:700}
+.rank-hero-stat-lbl{font-size:10px;color:#8878aa;margin-top:1px}
+.rank-progress-wrap{margin:12px 0 4px}
+.rank-progress-labels{display:flex;justify-content:space-between;font-size:11px;color:#8878aa;margin-bottom:5px}
+.rank-progress-bar{height:12px;border-radius:6px;overflow:hidden;background:#0d0520;border:1px solid rgba(255,255,255,.08)}
+.rank-progress-fill{height:100%;border-radius:6px;transition:width .5s ease}
+.rank-progress-hint{font-size:11px;color:#8878aa;margin-top:5px;text-align:center}
+.rank-ladder-item{border-radius:14px;padding:13px 14px;margin-bottom:8px;display:flex;align-items:center;gap:13px;border:1.5px solid transparent;transition:all .15s}
+.rank-ladder-item.current{border-width:2px}
+.rank-level-pips{display:flex;gap:4px;margin-top:6px}
+.rank-level-pip{flex:1;height:5px;border-radius:3px;background:#0d0520;overflow:hidden}
+.rank-level-pip-fill{height:100%;border-radius:3px}
+.rank-ladder-badges{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -145,7 +165,7 @@ input[type=text]:focus{outline:none;border-color:#a855f7}
 <!-- HOME -->
 <div id="homeScreen" class="screen active">
   <div class="topbar">
-    <span class="tb-title">⚡ ForzzyStars (1.2 Beta 3)</span>
+    <span class="tb-title">⚡ ForzzyStars</span>
     <div class="pills">
       <span class="pill p-trophy" id="hTrophy">🏆 0</span>
       <span class="pill p-gems" id="hGems">💎 120</span>
@@ -184,7 +204,7 @@ input[type=text]:focus{outline:none;border-color:#a855f7}
     <button class="nb" onclick="goTab('chests',this)"><span class="nb-icon">📦</span>Скрині</button>
     <button class="nb" onclick="goTab('shop',this)"><span class="nb-icon">🛒</span>Магазин</button>
     <button class="nb" onclick="goTab('profile',this)"><span class="nb-icon">👤</span>Профіль</button>
-    <button class="nb" onclick="goTab('friends',this)"><span class="nb-icon">👥</span>Друзі</button>
+    <button class="nb" onclick="goTab('ranked',this)"><span class="nb-icon">🏅</span>Ранги</button>
   </div>
 </div>
 
@@ -204,7 +224,7 @@ input[type=text]:focus{outline:none;border-color:#a855f7}
     <button class="nb active" onclick="goTab('chests',this)"><span class="nb-icon">📦</span>Скрині</button>
     <button class="nb" onclick="goTab('shop',this)"><span class="nb-icon">🛒</span>Магазин</button>
     <button class="nb" onclick="goTab('profile',this)"><span class="nb-icon">👤</span>Профіль</button>
-    <button class="nb" onclick="goTab('friends',this)"><span class="nb-icon">👥</span>Друзі</button>
+    <button class="nb" onclick="goTab('ranked',this)"><span class="nb-icon">🏅</span>Ранги</button>
   </div>
 </div>
 
@@ -224,7 +244,7 @@ input[type=text]:focus{outline:none;border-color:#a855f7}
     <button class="nb" onclick="goTab('chests',this)"><span class="nb-icon">📦</span>Скрині</button>
     <button class="nb active" onclick="goTab('shop',this)"><span class="nb-icon">🛒</span>Магазин</button>
     <button class="nb" onclick="goTab('profile',this)"><span class="nb-icon">👤</span>Профіль</button>
-    <button class="nb" onclick="goTab('friends',this)"><span class="nb-icon">👥</span>Друзі</button>
+    <button class="nb" onclick="goTab('ranked',this)"><span class="nb-icon">🏅</span>Ранги</button>
   </div>
 </div>
 
@@ -256,7 +276,7 @@ input[type=text]:focus{outline:none;border-color:#a855f7}
     <button class="nb" onclick="goTab('chests',this)"><span class="nb-icon">📦</span>Скрині</button>
     <button class="nb" onclick="goTab('shop',this)"><span class="nb-icon">🛒</span>Магазин</button>
     <button class="nb active" onclick="goTab('profile',this)"><span class="nb-icon">👤</span>Профіль</button>
-    <button class="nb" onclick="goTab('friends',this)"><span class="nb-icon">👥</span>Друзі</button>
+    <button class="nb" onclick="goTab('ranked',this)"><span class="nb-icon">🏅</span>Ранги</button>
   </div>
 </div>
 
@@ -273,7 +293,24 @@ input[type=text]:focus{outline:none;border-color:#a855f7}
     <button class="nb" onclick="goTab('chests',this)"><span class="nb-icon">📦</span>Скрині</button>
     <button class="nb" onclick="goTab('shop',this)"><span class="nb-icon">🛒</span>Магазин</button>
     <button class="nb" onclick="goTab('profile',this)"><span class="nb-icon">👤</span>Профіль</button>
-    <button class="nb active" onclick="goTab('friends',this)"><span class="nb-icon">👥</span>Друзі</button>
+    <button class="nb active" onclick="goTab('ranked',this)"><span class="nb-icon">🏅</span>Ранги</button>
+  </div>
+</div>
+
+<!-- RANKED TAB -->
+<div id="rankedScreen" class="screen">
+  <div class="topbar">
+    <button class="btn-back" onclick="goTab('home')">← Назад</button>
+    <span class="tb-title">🏅 Рейтинговий режим</span>
+    <span id="rankedTabPill" class="pill" style="background:#1a0a2e;color:#f1c40f;border:1px solid #f1c40f">🏅 0</span>
+  </div>
+  <div class="content" id="rankedTabContent"></div>
+  <div class="nav">
+    <button class="nb" onclick="goTab('home',this)"><span class="nb-icon">⚔️</span>Грати</button>
+    <button class="nb" onclick="goTab('chests',this)"><span class="nb-icon">📦</span>Скрині</button>
+    <button class="nb" onclick="goTab('shop',this)"><span class="nb-icon">🛒</span>Магазин</button>
+    <button class="nb" onclick="goTab('profile',this)"><span class="nb-icon">👤</span>Профіль</button>
+    <button class="nb active" onclick="goTab('ranked',this)"><span class="nb-icon">🏅</span>Ранги</button>
   </div>
 </div>
 
@@ -441,6 +478,25 @@ const BRAWLERS=[
   {id:'titan',name:'Титан',emo:'🗿',color:'#636e72',baseHp:9000,baseDmg:700,speed:2.0,maxAmmo:2,reload:100,shots:6,spread:.4,bspeed:6,range:220,
    desc:'Кам\'яний велетень — повільний але міцний',gadget:'Кам\'яна шкіра',gadgetDesc:'На 3 сек отримує лише 20% урону',gadgetUses:1,cost:1800,rarity:'legendary',
    superName:'Землетрус',superDesc:'Відштовхує всіх ворогів і завдає масивного урону',superHits:8},
+  // === 1.2 NEW BRAWLERS ===
+  {id:'nova',name:'Нова',emo:'🌠',color:'#e84393',baseHp:3800,baseDmg:880,speed:3.4,maxAmmo:4,reload:52,shots:1,spread:.02,bspeed:14,range:520,
+   desc:'Зіркова снайперка — блискавичні постріли',gadget:'Зоряний щит',gadgetDesc:'Відбиває кулю назад до ворога',gadgetUses:2,cost:1400,rarity:'epic',
+   superName:'Зоряний вибух',superDesc:'Ракета зірок влучає в усіх ворогів у радіусі',superHits:11},
+  {id:'magma',name:'Магма',emo:'🌋',color:'#e55c00',baseHp:7500,baseDmg:780,speed:2.3,maxAmmo:3,reload:85,shots:4,spread:.3,bspeed:7,range:230,
+   desc:'Вогняний монстр — розплавляє все навколо',gadget:'Лавова хвиля',gadgetDesc:'Хвиля лави відштовхує і підпалює ворогів',gadgetUses:1,cost:2000,rarity:'legendary',
+   superName:'Виверження',superDesc:'Покриває поле кипучою лавою — масовий урон по колу',superHits:9},
+  {id:'byte',name:'Байт',emo:'🤖',color:'#00d2d3',baseHp:4200,baseDmg:720,speed:3.3,maxAmmo:5,reload:48,shots:1,spread:.04,bspeed:13,range:460,
+   desc:'Кіборг — хакує ворожі пристрої',gadget:'Перехоплення',gadgetDesc:'Краде 1 секунду управління у ворога',gadgetUses:2,cost:1100,rarity:'epic',
+   superName:'Системний крах',superDesc:'Блокує гаджети і супер всіх ворогів на 3 сек',superHits:10},
+  {id:'luna',name:'Луна',emo:'🌙',color:'#a29bfe',baseHp:2900,baseDmg:1200,speed:3.7,maxAmmo:2,reload:95,shots:1,spread:0,bspeed:16,range:680,
+   desc:'Місячна мисливиця — б\'є з тіні',gadget:'Фаза місяця',gadgetDesc:'Ненадовго стає невидимою та прискорюється',gadgetUses:2,cost:1600,rarity:'legendary',
+   superName:'Повний місяць',superDesc:'Куля пробиває всіх ворогів і відновлює HP за кожне влучання',superHits:14},
+  {id:'zapper',name:'Заряд',emo:'⚡',color:'#fdcb6e',baseHp:3600,baseDmg:820,speed:3.2,maxAmmo:4,reload:58,shots:2,spread:.1,bspeed:12,range:400,
+   desc:'Електрошок — ланцюговий розряд',gadget:'Короткий замик',gadgetDesc:'Стрибок розряду між 2 найближчими ворогами',gadgetUses:3,cost:950,rarity:'epic',
+   superName:'Мегарозряд',superDesc:'Масивний електричний розряд по всіх ворогах у конусі',superHits:10},
+  {id:'ninjax',name:'Тінь-X',emo:'🥷',color:'#2d3436',baseHp:3300,baseDmg:1050,speed:4.1,maxAmmo:3,reload:62,shots:1,spread:.03,bspeed:15,range:480,
+   desc:'Ніндзя — блискавичний і смертоносний',gadget:'Задимлення',gadgetDesc:'Залишає хмару диму — приховує союзників',gadgetUses:2,cost:1250,rarity:'epic',
+   superName:'Вихор клинків',superDesc:'Стрімка атака крізь ворогів у лінії',superHits:12},
 ];
 
 const ICONS=['🌊','🎯','🦬','🚀','🐻','🌹','🎸','⚡','🌪️','🦅','🦎','🌵','🔆','❄️','👻','🔥','👑','🦁','🐉','⭐'];
@@ -510,6 +566,16 @@ const MAP_DEFS = {
      bushes:(W,H)=>[{x:W*.35,y:H*.35,w:35,h:35},{x:W*.6,y:H*.55,w:35,h:35}],
      water:(W,H)=>[{x:W*.7,y:H*.3,w:60,h:35}],
      spawnBlue:(W,H)=>({x:W*0.1,y:H*.5}),spawnRed:(W,H)=>({x:W*0.9,y:H*.5})},
+    {id:'d4',name:'Кристальна печера',
+     walls:(W,H)=>[{x:W*.3,y:H*.1,w:15,h:H*.35},{x:W*.3,y:H*.55,w:15,h:H*.35},{x:W*.6,y:H*.1,w:15,h:H*.35},{x:W*.6,y:H*.55,w:15,h:H*.35},{x:W*.42,y:H*.44,w:55,h:12}],
+     bushes:(W,H)=>[{x:W*.12,y:H*.42,w:38,h:38},{x:W*.72,y:H*.42,w:38,h:38}],
+     water:(W,H)=>[{x:W*.44,y:H*.12,w:60,h:28},{x:W*.44,y:H*.7,w:60,h:28}],
+     spawnBlue:(W,H)=>({x:W*0.08,y:H*.5}),spawnRed:(W,H)=>({x:W*0.92,y:H*.5})},
+    {id:'d5',name:'Вулканічний острів',
+     walls:(W,H)=>[{x:W*.4,y:H*.2,w:20,h:H*.6},{x:W*.22,y:H*.35,w:50,h:15},{x:W*.55,y:H*.5,w:50,h:15}],
+     bushes:(W,H)=>[{x:W*.08,y:H*.15,w:45,h:40},{x:W*.75,y:H*.55,w:45,h:40},{x:W*.08,y:H*.6,w:35,h:35}],
+     water:(W,H)=>[{x:W*.45,y:H*.08,w:50,h:25},{x:W*.2,y:H*.72,w:60,h:25}],
+     spawnBlue:(W,H)=>({x:W*0.06,y:H*.5}),spawnRed:(W,H)=>({x:W*0.94,y:H*.5})},
   ],
   brawl3: [
     {id:'b1',name:'Поле бою',
@@ -527,6 +593,16 @@ const MAP_DEFS = {
      bushes:(W,H)=>[{x:W*.1,y:H*.45,w:40,h:35},{x:W*.82,y:H*.45,w:40,h:35}],
      water:(W,H)=>[{x:W*.35,y:H*.78,w:100,h:30},{x:W*.15,y:H*.05,w:80,h:25}],
      spawnBlue:(W,H)=>({x:W*0.07,y:H/2}),spawnRed:(W,H)=>({x:W*0.93,y:H/2})},
+    {id:'b4',name:'Крижана тундра',
+     walls:(W,H)=>[{x:W*.22,y:H*.1,w:18,h:H*.8},{x:W*.62,y:H*.1,w:18,h:H*.8},{x:W*.3,y:H*.45,w:80,h:18}],
+     bushes:(W,H)=>[{x:W*.07,y:H*.25,w:42,h:42},{x:W*.78,y:H*.55,w:42,h:42},{x:W*.07,y:H*.6,w:35,h:35}],
+     water:(W,H)=>[{x:W*.4,y:H*.1,w:70,h:25},{x:W*.4,y:H*.72,w:70,h:25}],
+     spawnBlue:(W,H)=>({x:W*0.07,y:H*.5}),spawnRed:(W,H)=>({x:W*0.93,y:H*.5})},
+    {id:'b5',name:'Неонова арена',
+     walls:(W,H)=>[{x:W*.35,y:H*.05,w:20,h:H*.9},{x:W*.55,y:H*.05,w:20,h:H*.9},{x:W*.18,y:H*.38,w:70,h:18},{x:W*.58,y:H*.55,w:70,h:18}],
+     bushes:(W,H)=>[{x:W*.08,y:H*.15,w:50,h:40},{x:W*.76,y:H*.6,w:50,h:40}],
+     water:(W,H)=>[{x:W*.42,y:H*.42,w:55,h:30}],
+     spawnBlue:(W,H)=>({x:W*0.06,y:H*.5}),spawnRed:(W,H)=>({x:W*0.94,y:H*.5})},
   ],
   clash: [
     {id:'c1',name:'Велике поле',
@@ -547,6 +623,18 @@ const MAP_DEFS = {
      water:(W,H)=>[{x:W*.18,y:H*.78,w:70,h:35},{x:W*.65,y:H*.06,w:70,h:35}],
      spawnPositions:(W,H)=>([{x:W*.08,y:H*.08},{x:W*.92,y:H*.08},{x:W*.08,y:H*.92},{x:W*.92,y:H*.92},{x:W*.5,y:H*.08},{x:W*.5,y:H*.92},{x:W*.08,y:H*.5},{x:W*.92,y:H*.5}]),
      bigMap:true},
+    {id:'c4',name:'Лабіринт',
+     walls:(W,H)=>[{x:W*.2,y:H*.1,w:20,h:H*.35},{x:W*.2,y:H*.55,w:20,h:H*.35},{x:W*.5,y:H*.1,w:20,h:H*.35},{x:W*.5,y:H*.55,w:20,h:H*.35},{x:W*.75,y:H*.2,w:20,h:H*.6},{x:W*.3,y:H*.43,w:100,h:18}],
+     bushes:(W,H)=>[{x:W*.06,y:H*.06,w:45,h:40},{x:W*.8,y:H*.7,w:45,h:40},{x:W*.45,y:H*.44,w:30,h:30}],
+     water:(W,H)=>[{x:W*.55,y:H*.44,w:55,h:30}],
+     spawnPositions:(W,H)=>([{x:W*.06,y:H*.06},{x:W*.94,y:H*.06},{x:W*.06,y:H*.94},{x:W*.94,y:H*.94},{x:W*.5,y:H*.06},{x:W*.5,y:H*.94},{x:W*.06,y:H*.5},{x:W*.94,y:H*.5}]),
+     bigMap:true},
+    {id:'c5',name:'Неоновий хаос',
+     walls:(W,H)=>[{x:W*.28,y:H*.18,w:25,h:25},{x:W*.6,y:H*.18,w:25,h:25},{x:W*.28,y:H*.62,w:25,h:25},{x:W*.6,y:H*.62,w:25,h:25},{x:W*.42,y:H*.4,w:60,h:25},{x:W*.15,y:H*.38,w:45,h:18}],
+     bushes:(W,H)=>[{x:W*.1,y:H*.1,w:50,h:50},{x:W*.75,y:H*.65,w:50,h:50},{x:W*.1,y:H*.65,w:40,h:40},{x:W*.75,y:H*.1,w:40,h:40}],
+     water:(W,H)=>[{x:W*.42,y:H*.06,w:70,h:30},{x:W*.42,y:H*.78,w:70,h:30}],
+     spawnPositions:(W,H)=>([{x:W*.08,y:H*.08},{x:W*.92,y:H*.08},{x:W*.08,y:H*.92},{x:W*.92,y:H*.92},{x:W*.5,y:H*.08},{x:W*.5,y:H*.92},{x:W*.08,y:H*.5},{x:W*.92,y:H*.5}]),
+     bigMap:true},
   ],
   bounty: [
     {id:'bn1',name:'Мисливські угіддя',
@@ -554,6 +642,16 @@ const MAP_DEFS = {
      bushes:(W,H)=>[{x:W*.2,y:H*.4,w:40,h:40},{x:W*.7,y:H*.4,w:40,h:40},{x:W*.45,y:H*.65,w:35,h:35}],
      water:(W,H)=>[],
      spawnBlue:(W,H)=>({x:W*0.1,y:H/2}),spawnRed:(W,H)=>({x:W*0.9,y:H/2})},
+    {id:'bn2',name:'Нічне болото',
+     walls:(W,H)=>[{x:W*.32,y:H*.08,w:18,h:H*.4},{x:W*.32,y:H*.55,w:18,h:H*.38},{x:W*.58,y:H*.08,w:18,h:H*.4},{x:W*.58,y:H*.55,w:18,h:H*.38}],
+     bushes:(W,H)=>[{x:W*.08,y:H*.08,w:48,h:45},{x:W*.75,y:H*.58,w:48,h:45},{x:W*.08,y:H*.58,w:40,h:40},{x:W*.75,y:H*.08,w:40,h:40},{x:W*.43,y:H*.43,w:32,h:32}],
+     water:(W,H)=>[{x:W*.35,y:H*.42,w:75,h:38}],
+     spawnBlue:(W,H)=>({x:W*0.07,y:H*.5}),spawnRed:(W,H)=>({x:W*0.93,y:H*.5})},
+    {id:'bn3',name:'Кривавий захід',
+     walls:(W,H)=>[{x:W*.22,y:H*.22,w:28,h:28},{x:W*.58,y:H*.18,w:28,h:28},{x:W*.22,y:H*.62,w:28,h:28},{x:W*.58,y:H*.62,w:28,h:28},{x:W*.38,y:H*.4,w:75,h:16}],
+     bushes:(W,H)=>[{x:W*.1,y:H*.42,w:45,h:40},{x:W*.78,y:H*.42,w:45,h:40}],
+     water:(W,H)=>[{x:W*.28,y:H*.76,w:80,h:28}],
+     spawnBlue:(W,H)=>({x:W*0.07,y:H*.5}),spawnRed:(W,H)=>({x:W*0.93,y:H*.5})},
   ],
   heist:[
     {id:'h1',name:'Банківський сейф',
@@ -705,6 +803,7 @@ function goTab(tab,btn){
   if(tab==='shop'){renderShop();}
   if(tab==='profile'){renderProfile();}
   if(tab==='friends'){renderFriends();}
+  if(tab==='ranked'){renderRanked();}
   upTopBar();
 }
 
@@ -1033,39 +1132,38 @@ function buyCoinPack(coins,gems){if(S.gems<gems){alert('Не вистачає к
 function renderProfile(){
   upTopBar();
   const grid=document.getElementById('myGrid');grid.innerHTML='';
-  S.brawlers.filter(sb=>sb.owned).forEach(sb=>{
+  // Sort owned brawlers by trophies descending
+  const sorted=[...S.brawlers].filter(sb=>sb.owned).sort((a,b)=>b.trophies-a.trophies);
+  sorted.forEach(sb=>{
     const b=getBrawler(sb.id);if(!b)return;
     const d=document.createElement('div');d.className='b-card';
     d.innerHTML=`<div class="b-emo">${b.emo}</div><div class="b-name">${b.name}</div><div class="b-lvl">⚡${sb.power}</div><div class="b-tr">🏆${sb.trophies}</div>`;
     grid.appendChild(d);
   });
-  // Ranked info block
+  // Ranked mini-card linking to ranked tab
   const rankedEl=document.getElementById('rankedProfileBlock');
   if(rankedEl){
     const elo=S.rankedElo||0;
     const{rank,level,levelElo,eloPerLevel}=getRankInfo(elo);
-    const pct=rank.levels>1?Math.min(100,Math.round(levelElo/eloPerLevel*100)):100;
+    const pct=rank.eloPerLevel!==Infinity?Math.min(100,Math.round(levelElo/eloPerLevel*100)):100;
+    const wins=S.rankedWins||0,losses=S.rankedLosses||0;
+    const wr=wins+losses>0?Math.round(wins/(wins+losses)*100):0;
     rankedEl.innerHTML=`<div class="sec">Рейтинговий режим</div>
-      <div class="rank-card">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
-          <div style="font-size:36px">${rank.emo}</div>
-          <div>
-            <div style="color:${rank.color};font-size:16px;font-weight:700">${rank.name}${rank.levels>1?' '+level:''}</div>
-            <div style="color:#8878aa;font-size:12px">Ело: ${elo}</div>
+      <div class="rank-card" style="cursor:pointer;border:1px solid ${rank.color}66;background:linear-gradient(135deg,${rank.color}12,#2a1a4e)" onclick="goTab('ranked',document.querySelectorAll('.nb')[4])">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:40px;line-height:1">${rank.emo}</div>
+          <div style="flex:1;min-width:0">
+            <div style="color:${rank.color};font-size:15px;font-weight:700">${rank.name}${rank.levels>1?' '+level:''}</div>
+            <div style="color:#e2b8ff;font-size:18px;font-weight:700;margin:2px 0">${elo} <span style="font-size:11px;color:#8878aa;font-weight:400">ело</span></div>
+            ${rank.eloPerLevel!==Infinity?`<div style="height:6px;background:#1a0a2e;border-radius:3px;overflow:hidden;margin-top:4px"><div style="height:100%;width:${pct}%;background:${rank.color};border-radius:3px"></div></div>`:''}
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="color:#2ecc71;font-size:12px;font-weight:600">В: ${wins}</div>
+            <div style="color:#e74c3c;font-size:12px;font-weight:600">П: ${losses}</div>
+            <div style="color:#8878aa;font-size:11px">${wr}% вінрейт</div>
           </div>
         </div>
-        ${rank.levels>1?`<div class="elo-bar"><div class="elo-fill" style="width:${pct}%;background:${rank.color}"></div></div>
-        <div class="rank-progress-row"><span>${levelElo}/${eloPerLevel}</span><span>${rank.name} ${level+1<=rank.levels?level+1:'MAX'}</span></div>`:'<div style="color:#f1c40f;font-size:12px;text-align:center;margin-top:4px">👑 Максимальний ранг!</div>'}
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
-          <div class="stat-card"><div class="stat-val" style="color:#2ecc71">${S.rankedWins||0}</div><div class="stat-lbl">Перемог (рейт.)</div></div>
-          <div class="stat-card"><div class="stat-val" style="color:#e74c3c">${S.rankedLosses||0}</div><div class="stat-lbl">Поразок (рейт.)</div></div>
-        </div>
-        <div style="margin-top:10px">
-          <div style="color:#8878aa;font-size:11px;margin-bottom:6px">Всі ранги:</div>
-          <div style="display:flex;flex-wrap:wrap;gap:5px">
-            ${RANKS.map(r=>`<span class="rank-badge" style="background:${r.color}22;border:1px solid ${r.color};color:${r.color}">${r.emo} ${r.name}</span>`).join('')}
-          </div>
-        </div>
+        <div style="text-align:center;color:#8878aa;font-size:11px;margin-top:8px">👆 Натисни, щоб переглянути всі ранги →</div>
       </div>`;
   }
 }
@@ -1089,6 +1187,128 @@ function changeNick(){
   S.gems-=10;S.nick=v;save();upTopBar();renderProfile();closeModal('nickModal');alert('✅ Нікнейм змінено!');
 }
 function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+// RANKED TAB
+function renderRanked(){
+  const elo=S.rankedElo||0;
+  const{rank:cur,rankIdx:curIdx,level:curLvl,levelElo,eloPerLevel}=getRankInfo(elo);
+  const isMax=curIdx===RANKS.length-1;
+  const pct=!isMax&&eloPerLevel!==Infinity?Math.min(100,Math.round(levelElo/eloPerLevel*100)):100;
+  const eloToNext=!isMax&&eloPerLevel!==Infinity?eloPerLevel-levelElo:0;
+  const wins=S.rankedWins||0,losses=S.rankedLosses||0,total=wins+losses;
+  const wr=total>0?Math.round(wins/total*100):0;
+
+  // Update topbar pill
+  const pill=document.getElementById('rankedTabPill');
+  if(pill)pill.textContent=cur.emo+' '+elo+' ело';
+
+  // ---- Hero card (current rank) ----
+  const heroGrad=`linear-gradient(145deg,${cur.color}22 0%,#1a0a2e 60%)`;
+  let progressBlock='';
+  if(!isMax){
+    // What's the next level/rank name?
+    let nextName;
+    if(curLvl<cur.levels){nextName=cur.name+' '+(curLvl+1);}
+    else{const next=RANKS[curIdx+1];nextName=next?next.emo+' '+next.name:'MAX';}
+    progressBlock=`
+      <div class="rank-progress-wrap">
+        <div class="rank-progress-labels">
+          <span>${levelElo} / ${eloPerLevel} ело</span>
+          <span>До: ${nextName}</span>
+        </div>
+        <div class="rank-progress-bar">
+          <div class="rank-progress-fill" style="width:${pct}%;background:linear-gradient(90deg,${cur.color}99,${cur.color})"></div>
+        </div>
+        <div class="rank-progress-hint">${pct}% — залишилось <b style="color:${cur.color}">${eloToNext} ело</b></div>
+      </div>`;
+  } else {
+    progressBlock=`<div style="margin-top:10px;padding:8px;background:${cur.color}22;border-radius:8px;color:${cur.color};font-size:13px;font-weight:700">👑 Максимальний ранг досягнуто!</div>`;
+  }
+
+  let heroHtml=`
+  <div class="rank-hero" style="background:${heroGrad};border:2px solid ${cur.color}55">
+    <span class="rank-hero-emo" style="filter:drop-shadow(0 0 16px ${cur.color}88)">${cur.emo}</span>
+    <div class="rank-hero-name" style="color:${cur.color}">${cur.name}${cur.levels>1?' '+curLvl:''}</div>
+    <div class="rank-hero-elo" style="color:#e2b8ff">${elo} <span style="font-size:14px;color:#8878aa;font-weight:400">ело</span></div>
+    ${progressBlock}
+    <div class="rank-hero-stats">
+      <div class="rank-hero-stat">
+        <div class="rank-hero-stat-val" style="color:#2ecc71">${wins}</div>
+        <div class="rank-hero-stat-lbl">Перемог</div>
+      </div>
+      <div class="rank-hero-stat">
+        <div class="rank-hero-stat-val" style="color:#e2b8ff">${wr}%</div>
+        <div class="rank-hero-stat-lbl">Вінрейт</div>
+      </div>
+      <div class="rank-hero-stat">
+        <div class="rank-hero-stat-val" style="color:#e74c3c">${losses}</div>
+        <div class="rank-hero-stat-lbl">Поразок</div>
+      </div>
+    </div>
+  </div>`;
+
+  // ---- Rank ladder ----
+  // Pre-compute cumulative start ELO for each rank
+  let cumElo=0;
+  const rankStarts=RANKS.map(r=>{
+    const s=cumElo;
+    if(r.eloPerLevel!==Infinity) cumElo+=r.levels*r.eloPerLevel;
+    return s;
+  });
+
+  let ladderHtml='<div class="sec" style="margin-top:4px">Всі ранги</div>';
+  RANKS.forEach((r,ri)=>{
+    const isCur=ri===curIdx;
+    const passed=ri<curIdx;
+    const locked=ri>curIdx;
+    const startElo=rankStarts[ri];
+    const endElo=r.eloPerLevel!==Infinity?rankStarts[ri]+r.levels*r.eloPerLevel:null;
+
+    // Level pips
+    let pipsHtml='';
+    if(r.levels>1){
+      let pipsInner='';
+      for(let lv=1;lv<=r.levels;lv++){
+        let fill=0;
+        if(passed) fill=100;
+        else if(isCur){
+          if(lv<curLvl) fill=100;
+          else if(lv===curLvl) fill=pct;
+          else fill=0;
+        }
+        pipsInner+=`<div class="rank-level-pip"><div class="rank-level-pip-fill" style="width:${fill}%;background:${r.color}"></div></div>`;
+      }
+      pipsHtml=`<div class="rank-level-pips">${pipsInner}</div>`;
+    }
+
+    // Badge: CURRENT / checkmark / locked
+    let badge='';
+    if(isCur) badge=`<span style="background:${r.color};color:#000;border-radius:20px;padding:1px 8px;font-size:10px;font-weight:800;margin-left:6px">ЗАРАЗ</span>`;
+    else if(passed) badge=`<span style="color:#2ecc71;font-size:12px;margin-left:6px">✓</span>`;
+
+    const eloRange=endElo?`${startElo}–${endElo} ело`:`від ${startElo} ело`;
+    const cardBg=isCur?`linear-gradient(135deg,${r.color}18,#2a1a4e)`:'#2a1a4e';
+    const cardBorder=isCur?`2px solid ${r.color}`:`1px solid #3a2a5e`;
+    const opacity=locked?'opacity:.5;':'';
+
+    ladderHtml+=`
+    <div class="rank-ladder-item ${isCur?'current':''}" style="background:${cardBg};border:${cardBorder};${opacity}">
+      <div style="font-size:${isCur?42:32}px;flex-shrink:0;line-height:1;${isCur?`filter:drop-shadow(0 0 8px ${r.color}88)`:''}">${r.emo}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;flex-wrap:wrap">
+          <span style="color:${r.color};font-size:${isCur?15:13}px;font-weight:700">${r.name}</span>
+          ${r.levels>1?`<span style="color:#8878aa;font-size:11px;margin-left:5px">(${r.levels} рівні)</span>`:''}
+          ${badge}
+        </div>
+        <div style="color:#8878aa;font-size:10px;margin-top:2px">${eloRange}</div>
+        <div style="color:#8878aa;font-size:10px;margin-top:1px">+${r.winElo} за перемогу · −${r.loseElo} за поразку</div>
+        ${pipsHtml}
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('rankedTabContent').innerHTML=heroHtml+ladderHtml;
+}
 
 // FRIENDS
 const FRIENDS=[];
@@ -2381,6 +2601,52 @@ function exitGame(){
   document.getElementById('teamScore').style.display='none';
   goTab('home',document.querySelector('.nb'));
 }
+
+// ===== 1.2 UPDATE =====
+(function applyV12Update(){
+  if(S.v12applied)return;
+  // 1. Reset trophies > 500 to 500 for all owned brawlers
+  S.brawlers.forEach(sb=>{
+    if(sb.trophies>500)sb.trophies=500;
+  });
+  // 2. Reset ranked elo to 0
+  S.rankedElo=0;
+  S.rankedWins=0;
+  S.rankedLosses=0;
+  // 3. Give free epic chest ("1.2 реліз!!!")
+  S._pendingUpdateChest='epic';
+  // 4. Give free 250 tickets ("Компенсація за скид трофеїв!")
+  S.tickets=(S.tickets||0)+250;
+  S.v12applied=true;
+  save();
+  // Show update popup
+  setTimeout(()=>{
+    const bg=document.createElement('div');
+    bg.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.88);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+    bg.innerHTML=`<div style="background:#1a0a2e;border-radius:18px;padding:22px;width:100%;max-width:360px;border:2px solid #a855f7;text-align:center">
+      <div style="font-size:36px;margin-bottom:6px">🚀</div>
+      <div style="color:#f1c40f;font-size:22px;font-weight:800;margin-bottom:4px">ForzzyStars 1.2</div>
+      <div style="color:#e2b8ff;font-size:14px;margin-bottom:14px">Оновлення вже тут!</div>
+      <div style="background:#2a1a4e;border-radius:10px;padding:10px;margin-bottom:8px;text-align:left">
+        <div style="color:#a855f7;font-size:12px;font-weight:700;margin-bottom:6px">🎁 Подарунки від розробника:</div>
+        <div style="color:#f1c40f;font-size:13px;font-weight:600">💜 Безплатна Епічна скриня!</div>
+        <div style="color:#a855f7;font-size:12px;margin-bottom:6px">(буде відкрита автоматично)</div>
+        <div style="color:#f1c40f;font-size:13px;font-weight:600">🎟 +250 Білетів — компенсація за скид трофеїв!</div>
+      </div>
+      <div style="background:#2a1a4e;border-radius:10px;padding:10px;margin-bottom:14px;text-align:left">
+        <div style="color:#2ecc71;font-size:12px;font-weight:700;margin-bottom:5px">🆕 Що нового в 1.2:</div>
+        <div style="color:#c4a8e8;font-size:11px;line-height:1.7">⚔️ +6 нових бійців<br>🗺 +10 нових карт (у кожному режимі)<br>📊 Трофеї вище 500 скинуто до 500<br>🏅 Ело скинуто до нуля<br>✨ Заголовок оновлено</div>
+      </div>
+      <button onclick="this.closest('[style]').remove();if(window._doV12Chest)window._doV12Chest();" style="background:#a855f7;color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;width:100%">🎉 Отримати подарунки!</button>
+    </div>`;
+    document.body.appendChild(bg);
+    window._doV12Chest=function(){
+      openChestById('epic',false);
+      upTopBar();
+      renderChests();
+    };
+  },600);
+})();
 
 // ===== INIT =====
 renderHome();upTopBar();
