@@ -738,6 +738,7 @@ function defState(){return{
   selBrawler:'shelly',selMode:'duel',
   lastTrophyMilestone:0,
   rankedElo:0,rankedWins:0,rankedLosses:0,
+  winStreak:0,
 }}
 let S=JSON.parse(localStorage.getItem('brawljs2')||'null')||defState();
 BRAWLERS.forEach(b=>{if(!S.brawlers.find(x=>x.id===b.id))S.brawlers.push({id:b.id,owned:false,power:1,trophies:0});});
@@ -764,10 +765,10 @@ function getAIDiffMult(isTraining, isRanked){
   const steps=Math.floor(trophies/100);
   return 1+steps*0.05;
 }
-// Extra HP per difficulty level (+100 HP per 5% step above 1)
+// Extra HP per difficulty level (+250 HP per 5% step above 1)
 function getDiffExtraHp(aiDiff){
   const steps=Math.round((aiDiff-1)/0.05);
-  return steps*100;
+  return steps*250;
 }
 
 function upTopBar(){
@@ -1325,10 +1326,30 @@ function renderFriends(){
 }
 
 // TROPHY SYSTEM
-function getTrophyDelta(bTrophies,win){
-  if(bTrophies<1000) return win?10:-5;
-  if(bTrophies<2000) return win?8:-6;
-  return win?4:-8;
+function getTrophyDelta(bTrophies,win,modeId){
+  // Trophy table per mode and bracket
+  // modeId: 'duel', 'brawl3', 'clash'(FFA), 'bounty'(treat as 3v3)
+  let w,l;
+  const m=modeId||S.selMode;
+  if(m==='duel'){
+    if(bTrophies<1000){w=8;l=4;}
+    else if(bTrophies<1500){w=5;l=3;}
+    else if(bTrophies<2000){w=3;l=5;}
+    else{w=2;l=6;}
+  } else if(m==='clash'||m==='bounty'){
+    // Зіткнення/FFA
+    if(bTrophies<1000){w=9;l=4;}
+    else if(bTrophies<1500){w=6;l=6;}
+    else if(bTrophies<2000){w=3;l=7;}
+    else{w=2;l=8;}
+  } else {
+    // 3 на 3 (brawl3) — default
+    if(bTrophies<1000){w=10;l=6;}
+    else if(bTrophies<1500){w=8;l=7;}
+    else if(bTrophies<2000){w=5;l=7;}
+    else{w=4;l=8;}
+  }
+  return win?w:-l;
 }
 
 // MULTIPLAYER
@@ -1985,8 +2006,15 @@ function startRound(p2BrawlerOverride){
         return;
       }
       const sb2=getSave(S.selBrawler);
-      const delta=getTrophyDelta(sb2.trophies,finalWin);
-      sb2.trophies=Math.max(0,sb2.trophies+delta);
+      const delta=getTrophyDelta(sb2.trophies,finalWin,S.selMode);
+      // Win streak bonus (max +5, only below 2000 trophies, not in training/ranked)
+      let streakBonus=0;
+      if(finalWin){
+        if(sb2.trophies<2000){S.winStreak=(S.winStreak||0)+1;streakBonus=Math.min(5,S.winStreak-1);}
+        else{S.winStreak=0;}
+      }else{S.winStreak=0;}
+      const totalDelta=finalWin?delta+streakBonus:delta;
+      sb2.trophies=Math.max(0,sb2.trophies+totalDelta);
       if(finalWin){S.wins++;S.coins+=80;S.tickets+=20;}
       let giftTxt='';
       if(finalWin){const gi=Math.floor(Math.random()*WIN_GIFTS.length);const g=WIN_GIFTS[gi];applyReward(g);giftTxt=`<div style="background:#2d0a5a;border-radius:8px;padding:8px;margin-top:6px">${g.emo} Подарунок за перемогу: ${g.name}</div>`;}
@@ -2002,8 +2030,9 @@ function startRound(p2BrawlerOverride){
       const ri=document.getElementById('roundIndicator');
       if(ri)ri.textContent=`Серія завершена | ${_roundState.wins} - ${_roundState.losses}`;
       document.getElementById('resTitle').textContent=finalWin?'🏆 Перемога!':'💀 Поразка';
-      document.getElementById('resSub').textContent=(finalWin?'+':'')+delta+' 🏆 · Рахунок раундів: '+_roundState.wins+'-'+_roundState.losses;
-      document.getElementById('resRewards').innerHTML=(finalWin?'<div>+80 🪙 +20 🎟</div>':'')+giftTxt+milestoneTxt;
+      const streakTxt=finalWin&&streakBonus>0?` 🔥 Серія ${S.winStreak} (+${streakBonus} бонус)`:'';
+      document.getElementById('resSub').textContent=(finalWin?'+':'')+totalDelta+' 🏆'+streakTxt+' · Рахунок раундів: '+_roundState.wins+'-'+_roundState.losses;
+      document.getElementById('resRewards').innerHTML=(finalWin?`<div>+80 🪙 +20 🎟${streakBonus>0?' · 🔥 Вінстрік x'+S.winStreak:''}</div>`:'')+giftTxt+milestoneTxt;
       buildScoreboard();
       const rBtn=document.querySelector('#resultOverlay .btn-purple');
       if(rBtn)rBtn.textContent='🔄 Грати ще раз';
@@ -2011,8 +2040,15 @@ function startRound(p2BrawlerOverride){
       return;
     }
     // Single-round modes (ffa, bounty)
-    const sb2=getSave(S.selBrawler);const delta=getTrophyDelta(sb2.trophies,win);
-    sb2.trophies=Math.max(0,sb2.trophies+delta);
+    const sb2=getSave(S.selBrawler);const delta=getTrophyDelta(sb2.trophies,win,S.selMode);
+    // Win streak bonus
+    let streakBonus=0;
+    if(win){
+      if(sb2.trophies<2000){S.winStreak=(S.winStreak||0)+1;streakBonus=Math.min(5,S.winStreak-1);}
+      else{S.winStreak=0;}
+    }else{S.winStreak=0;}
+    const totalDelta=win?delta+streakBonus:delta;
+    sb2.trophies=Math.max(0,sb2.trophies+totalDelta);
     if(win){S.wins++;S.coins+=80;S.tickets+=20;}
     let giftTxt='';
     if(win){const gi=Math.floor(Math.random()*WIN_GIFTS.length);const g=WIN_GIFTS[gi];applyReward(g);giftTxt=`<div style="background:#2d0a5a;border-radius:8px;padding:8px;margin-top:6px">${g.emo} Подарунок за перемогу: ${g.name}</div>`;}
@@ -2025,9 +2061,10 @@ function startRound(p2BrawlerOverride){
       milestoneTxt=`<div style="background:#1a3a0a;border-radius:8px;padding:8px;margin-top:6px;border:1px solid #2ecc71">🌟 ${newMilestone} трофеїв! Нагорода: ${mg.emo} ${mg.name}</div>`;
     }
     save();upTopBar();
+    const streakTxt2=win&&streakBonus>0?` 🔥 Серія ${S.winStreak} (+${streakBonus})`:'';
     document.getElementById('resTitle').textContent=win?'🏆 Перемога!':'💀 Поразка';
-    document.getElementById('resSub').textContent=(win?'+':'')+delta+' 🏆 · '+(win?'+80 🪙':'-');
-    document.getElementById('resRewards').innerHTML=(win?'<div>+80 🪙 +20 🎟</div>':'')+giftTxt+milestoneTxt;
+    document.getElementById('resSub').textContent=(win?'+':'')+totalDelta+' 🏆'+streakTxt2+' · '+(win?'+80 🪙':'-');
+    document.getElementById('resRewards').innerHTML=(win?`<div>+80 🪙 +20 🎟${streakBonus>0?' · 🔥 Вінстрік x'+S.winStreak:''}</div>`:'')+giftTxt+milestoneTxt;
     buildScoreboard();
     document.getElementById('resultOverlay').classList.add('show');
   }
@@ -2106,7 +2143,23 @@ function startRound(p2BrawlerOverride){
         if(bl2>4){bot.face=Math.atan2(bdy,bdx);
           const nx=clamp(bot.x+bdx/bl2*bot.speed,bot.r,W-bot.r);const ny=clamp(bot.y+bdy/bl2*bot.speed,bot.r,H-bot.r);
           if(!wallBlock(nx,bot.y,bot.r,false))bot.x=nx;
+          else{
+            // Try sliding vertically or picking a detour angle
+            const perp1=bot.face+Math.PI/2;const perp2=bot.face-Math.PI/2;
+            const ax=clamp(bot.x+Math.cos(perp1)*bot.speed,bot.r,W-bot.r);
+            if(!wallBlock(ax,bot.y,bot.r,false))bot.x=ax;
+            else{const bx2=clamp(bot.x+Math.cos(perp2)*bot.speed,bot.r,W-bot.r);if(!wallBlock(bx2,bot.y,bot.r,false))bot.x=bx2;}
+            // Also nudge target away from wall to unstick
+            bot.tx=clamp(bot.tx+(Math.random()-.5)*80,20,W-20);
+          }
           if(!wallBlock(bot.x,ny,bot.r,false))bot.y=ny;
+          else{
+            const perp1=bot.face+Math.PI/2;const perp2=bot.face-Math.PI/2;
+            const ay=clamp(bot.y+Math.sin(perp1)*bot.speed,bot.r,H-bot.r);
+            if(!wallBlock(bot.x,ay,bot.r,false))bot.y=ay;
+            else{const by2=clamp(bot.y+Math.sin(perp2)*bot.speed,bot.r,H-bot.r);if(!wallBlock(bot.x,by2,bot.r,false))bot.y=by2;}
+            bot.ty=clamp(bot.ty+(Math.random()-.5)*80,20,H-20);
+          }
         }
         bot.shotT++;
         if(bot.shotT>bot.b.reload*Math.max(0.6,1.5/aiDiff)){
@@ -2512,7 +2565,7 @@ function startRound(p2BrawlerOverride){
       ctx.globalAlpha=(e._invisible?.3:1)*(inBush(e)&&e!==P?.5:1);
       ctx.beginPath();ctx.arc(0,0,e.r,0,Math.PI*2);
       ctx.fillStyle=isFrz?'#74b9ff55':(e.color+'55');ctx.fill();
-      let strokeCol=e===P&&gadgetActive?'#f1c40f':e.team==='blue'?'#3498db':e.team==='red'?'#e74c3c':e.color;
+      let strokeCol=e===P&&gadgetActive?'#f1c40f':e===P?'#2ecc71':e.team==='blue'?'#3498db':e.team==='red'?'#e74c3c':e.color;
       if(e===P&&P._shieldActive)strokeCol='#f1c40f';
       if(e===P&&P._berserker)strokeCol='#e74c3c';
       if(e===P&&P._stoneShield&&Date.now()<P._stoneShield)strokeCol='#636e72';
@@ -2531,6 +2584,15 @@ function startRound(p2BrawlerOverride){
       ctx.fillRect(e.x-e.r*1.1,e.y-e.r-11,bw*(e.hp/e.maxHp),5);
       ctx.globalAlpha=1;
     });
+
+    // Super-ready red circle indicator above player
+    if(!P.dead&&superReady){
+      ctx.save();
+      ctx.strokeStyle='#e74c3c';ctx.lineWidth=2.5;
+      ctx.globalAlpha=0.85+0.15*Math.sin(Date.now()*0.01);
+      ctx.beginPath();ctx.arc(P.x,P.y,P.r+7,0,Math.PI*2);ctx.stroke();
+      ctx.restore();
+    }
 
     // Player bush overlay (dim screen if player is in bush)
     if(playerInBush){
